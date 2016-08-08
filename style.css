@@ -22,8 +22,9 @@ a:hover {
 }
 
 code {
-    font-family: monospace;
 	font-size: 125%;
+font-family: monospace;
+text-align: left;
 	margin-left: 2em;
 	color: #eb984e;	
 }
