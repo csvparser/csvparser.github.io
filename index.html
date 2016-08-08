@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>
+CSV parser
+</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+
+<body onload="putfields();">
+<div class="bodysection">
+
+<div class="topsection">
+	<h1>
+		CSV parser in C++
+	</h1>
+</div>
+
+<div class="mainsection">
+	<h1>
+		Introduction:
+	</h1>
+	<p>
+		CSVparser.h is a simple c++ libary. It can load, save and modify Microsoft Excel friendly CSV files.
+	</p>
+	<p>
+		It supports quotation marks, line breaks and commas in cell values.
+	</p>
+	<p>
+		It uses std::map to store data. It supports up to 2^32 columns and rows.
+	</p>
+
+	<h1>
+		Usage:
+	</h1>
+	<p>
+		Create a CSVdata:
+	</p>
+	<code>
+		CSVdata csv;
+	</code>
+	<p>
+		Load a CSV file:
+	</p>
+	<code>
+		csv.LoadFile("filename.csv");
+	</code>	
+	<p>
+		Keep current data and load a CSV file:
+	</p>
+	<code>
+		csv.LoadFile("filename.csv",false);
+	</code>		
+	<p>
+		Save to a CSV file:
+	</p>
+	<code>
+		csv.SaveFile("filename.csv");
+	</code>	
+	<p>
+		Assign a value to cell:
+	</p>
+	<code>
+		csv.SetCell(row, column, value);
+	</code>		
+	<p>
+		Get cell value:
+	</p>
+	<code>
+		value = csv.GetCell(row, column);
+	</code>	
+	<p>
+		Erase a cell:
+	</p>
+	<code>
+		csv.EraseCell(row, column); // same as SetCell(row, column, "");
+	</code>	
+	<p>
+		Convert a string to a safe CSV string:
+	</p>
+	<code>
+		value = csv.SafeStr(str);
+	</code>		
+	<p>
+		Check if a cell has value and assign it to a string:
+	</p>
+	<code>
+		check = csv.Find(row, column, &amp;str);
+	</code>		
+	<p>
+		Get lower and upper bounds:
+	</p>
+	<code>
+		check = csv.LBElem(&amp;row, &amp;column, &amp;str);
+	</code>
+	<br>		
+	<code>		
+		check = csv.UBElem(&amp;row, &amp;column, &amp;str);
+	</code>	
+	<p>
+		Search for a value from position row, column:
+	</p>
+	<code>
+		check = csv.Search(value, &amp;row, &amp;column);
+	</code>
+	<p>
+		Iteration:
+	</p>
+	<code>
+		check = csv.BeginIter(&amp;it);
+	</code>
+	<br>		
+	<code>		
+		check = csv.NextIter(&amp;it);
+	</code>	
+	<br>		
+	<code>		
+		check = csv.GetIter(it, &amp;row, &amp;column, &amp;str);
+	</code>		
+	
+	<h1>
+		Download:
+	</h1>
+	<p>
+		Use links below to download CSVparser.
+	</p>
+	<p>
+		<a href="CSVparser.h">CSVparser.h</a>
+	</p>
+	<p>
+		<a href="CSVexample.cpp">CSVexample.cpp</a>
+	</p>
+	
+	<h1>
+		About:
+	</h1>
+	<p>
+		CSVparser version 1.0 by Hamid Soltani.
+	</p>
+	<p>
+		Last modified: Aug. 2016.
+	</p>	
+</div>
+
+</div>
+</body>
+</html>
