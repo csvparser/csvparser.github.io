@@ -4,13 +4,8 @@
 	box-sizing: border-box;
 	font-family: Verdana;
 	text-decoration: none;
-	text-align: justify;
 	line-height: 200%;
 	color: #fff;	
-}
-
-body {
-	background:  #154360;
 }
 
 a  {
@@ -23,20 +18,20 @@ a:hover {
 
 code {
 	font-size: 125%;
-font-family: monospace;
-text-align: left;
+	font-family: monospace;
 	margin-left: 2em;
 	color: #eb984e;	
 }
 
 .topsection {
 	padding: 10px;
-	background:  #17202a;
+	background: #17202a;
 	width: 100%;
 }
 
 .mainsection {
 	padding: 20px;
+	background: #154360;	
 	width: 100%;
 }
 
