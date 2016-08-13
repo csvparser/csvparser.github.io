@@ -7,7 +7,8 @@ CSV parser
 <link rel="stylesheet" type="text/css" href="style.css">
 </head>
 
-<body>
+<body onload="putfields();">
+<div class="bodysection">
 
 <div class="topsection">
 	<h1>
@@ -32,6 +33,18 @@ CSV parser
 	<h1>
 		Usage:
 	</h1>
+	<p>	
+		Convert a string to a safe CSV string:
+	</p>
+	<code>	
+		value = SafeStr(str);
+	</code>		
+	<p>	
+		Convert a CSV string to a primary form:
+	</p>
+	<code>
+		value = PrimaryStr(str);
+	</code>		
 	<p>
 		Create a CSVdata:
 	</p>
@@ -69,16 +82,16 @@ CSV parser
 		value = csv.GetCell(row, column);
 	</code>	
 	<p>
+		Get cell value as a double:
+	</p>
+	<code>
+		check = csv.GetCell(row, column, &amp;x);
+	</code>		
+	<p>
 		Erase a cell:
 	</p>
 	<code>
 		csv.EraseCell(row, column); // same as SetCell(row, column, "");
-	</code>	
-	<p>
-		Convert a string to a safe CSV string:
-	</p>
-	<code>
-		value = csv.SafeStr(str);
 	</code>		
 	<p>
 		Check if a cell has value and assign it to a string:
@@ -103,6 +116,12 @@ CSV parser
 		check = csv.Search(value, &amp;row, &amp;column);
 	</code>
 	<p>
+		Search for a value from position 0, 0:
+	</p>
+	<code>
+		check = csv.Search(value, &amp;row, &amp;column, true);
+	</code>	
+	<p>
 		Iteration:
 	</p>
 	<code>
@@ -115,13 +134,27 @@ CSV parser
 	<br>		
 	<code>		
 		check = csv.GetIter(it, &amp;row, &amp;column, &amp;str);
-	</code>		
+	</code>	
+	<p>	
+		() Operator:
+	</p>
+	<code>	
+		csv(row, column)
+	</code>			
+	
+	<h1>
+		Version History:
+	</h1>
+	<p>
+		v1.1: Operator () added, some minor improvements </br>
+		v1.0: First Release
+	</p>
 	
 	<h1>
 		Download:
 	</h1>
 	<p>
-		Use links below to download CSVparser.
+		Use links below to download last release of CSVparser.
 	</p>
 	<p>
 		<a href="CSVparser.h">CSVparser.h</a>
@@ -141,5 +174,6 @@ CSV parser
 	</p>	
 </div>
 
+</div>
 </body>
 </html>

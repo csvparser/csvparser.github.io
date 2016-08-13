@@ -3,7 +3,6 @@
 // Display CSV data
 
 #include "stdafx.h"
-#include "CSVparser.h"
 #include <map>
 #include <iostream>
 #include <fstream>
@@ -13,14 +12,14 @@
 #include <stdio.h>
 #include <ctime>
 
-
+#include "CSVparser.h"
 
 int main()
 {
 	CSVdata csv;
 
 	// assigning some data
-
+	
 	csv.SetCell(0, 0, "Multiplication Table:");
 	for (int i = 1;i < 10;i++)
 		for (int j = 1;j < 10;j++)
@@ -52,18 +51,24 @@ int main()
 	csv.SetCell(16, 1, "Old Value");
 	csv.SetCell(16, 1, "New Value");
 
+	csv.SetCell(16, 2, "To be Erased!");
+
+	csv(20, 1) = "By operator!";
+
 	//save and load files
 	csv.SaveFile("1.csv");
 
 	csv.Clear();
 
-	csv.SetCell(17, 1, "Date:");
+	csv.SetCell(10, 8, "Date:");
 	csv.SetCell(18, 8, "Date:");
 
 	csv.SaveFile("2.csv");
 
 	csv.LoadFile("1.csv");
 	csv.LoadFile("2.csv", false);
+
+	csv.EraseCell(16, 2);
 
 	// assign current date after cell "Date:"
 	struct tm newtime;
@@ -101,7 +106,8 @@ int main()
 
 	csv.SaveFile("3.csv");
 
-	puts("Press Enter to exit...");
+	puts("Press Enter to exit...\n 8");
+	//puts(csv(21, 1).c_str());
 	getchar();
 
 	return 0;

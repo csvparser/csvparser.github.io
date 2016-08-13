@@ -6,6 +6,12 @@ It supports quotation marks, line breaks and commas in cell values.
 It uses std::map to store data. It supports up to 2^32 columns and rows.
 
 Usage:
+Convert a string to a safe CSV string:
+value = SafeStr(str);
+
+Convert a CSV string to a primary form:
+value = PrimaryStr(str);
+
 Create a CSVdata:
 CSVdata csv;
 
@@ -27,28 +33,32 @@ value = csv.GetCell(row, column);
 Erase a cell:
 csv.EraseCell(row, column); // same as SetCell(row, column, "");
 
-Convert a string to a safe CSV string:
-value = csv.SafeStr(str);
-
 Check if a cell has value and assign it to a string:
-check = csv.Find(row, column, &amp;str);
+check = csv.Find(row, column, &str);
 
 Get lower and upper bounds:
-check = csv.LBElem(&amp;row, &amp;column, &amp;str);
-check = csv.UBElem(&amp;row, &amp;column, &amp;str);
+check = csv.LBElem(&row, &column, &str);
+check = csv.UBElem(&row, &column, &str);
 
 Search for a value from position row, column:
-check = csv.Search(value, &amp;row, &amp;column);
+check = csv.Search(value, &row, &column);
+
+Search for a value from position 0, 0:
+check = csv.Search(value, &row, &column, true);
 
 Iteration:
-check = csv.BeginIter(&amp;it);
-check = csv.NextIter(&amp;it);
-check = csv.GetIter(it, &amp;row, &amp;column, &amp;str);
+check = csv.BeginIter(&it);
+check = csv.NextIter(&it);
+check = csv.GetIter(it, &row, &column, &str);
 
-CSVparser version 1.0 by Hamid Soltani. (yahoo: hsoltanim)
+() Operator:
+csv(row, column)
+
+CSVparser version 1.1 by Hamid Soltani. (yahoo: hsoltanim)
 Last modified: Aug. 2016.
 
 *******************************************************************/
+
 #pragma once
 
 #include <map>
@@ -64,6 +74,89 @@ using namespace std;
 using LI = unsigned long int;
 using LLI = unsigned long long int;
 
+/******************************************************************/
+const string PrimaryStr(const string& s)
+{
+	string t;
+	unsigned int len = (unsigned)s.length();
+	if ((len>0)&(s[0] == '"')&(s[len - 1] == '"'))
+		for (unsigned int i = 1; i < len - 1;i++)
+		{
+			t += s[i];
+			if ((s[i] == '"')&(s[i + 1] == '"'))
+				i++;
+		}
+	else
+		t = s;
+	return t;
+}
+
+const string SafeStr(const string& s)
+{
+	string t;
+	unsigned int len = (unsigned)s.length();
+	if ((s[0] == '"')&(s[len - 1] == '"'))
+	{
+		t = "\"";
+		for (unsigned int i = 1; i < len - 1;i++)
+			if (s[i] == '"')
+			{
+				t += "\"\"";
+				if (s[i + 1] == '"')
+					i++;
+			}
+			else
+			{
+				t += s[i];
+			}
+		t += "\"";
+	}
+	else
+	{
+		unsigned int i = 0;
+		bool qneed = (s[0] == '\"');
+		while ((!qneed)&(i < len))
+		{
+			qneed = ((s[i] == ',') | (s[i] == '\n'));
+			i++;
+		}
+		if (qneed)
+		{
+			t = "\"";
+			for (unsigned int i = 0; i < len;i++)
+			{
+				if (s[i] == '"')
+					t += "\"\"";
+				else
+					t += s[i];
+			}
+			t += "\"";
+		}
+		else
+		{
+			t = s;
+		}
+	}
+	return t;
+}
+
+bool StrDouble(const string s, double& x)
+{
+	double d;
+	try {
+		d = stod(s);
+	}
+	catch (const invalid_argument&) {
+		return false;
+	}
+	catch (const out_of_range&) {
+		return false;
+	}
+	x = d;
+	return true;
+}
+
+/******************************************************************/
 class CSVdata
 {
 private:
@@ -94,8 +187,8 @@ private:
 		i.index = index;
 		return i.at.column;
 	}
-public:
 
+public:
 	CSVdata()
 	{
 
@@ -193,7 +286,7 @@ public:
 			{
 				if (cell.length() > 0)
 				{
-					csv_map[_index(saverow, savecolumn)] = cell;
+					csv_map[_index(saverow, savecolumn)] = PrimaryStr(cell);
 					cell = "";
 				}
 				cellread = false;
@@ -233,7 +326,7 @@ public:
 				os << ",";
 				column++;
 			}
-			os << it.second.c_str();
+			os << SafeStr(it.second).c_str();
 		}
 
 		os << "\n";
@@ -241,71 +334,23 @@ public:
 		return 0;
 	}
 
-	string SafeStr(const string s)
-	{
-		string t;
-		unsigned int len = (unsigned)s.length();
-		if ((s[0] == '"')&(s[len - 1] == '"'))
-		{
-			t = "\"";
-			for (unsigned int i = 1; i < len - 1;i++)
-				if (s[i] == '"')
-				{
-					t += "\"\"";
-					if (s[i + 1] == '"')
-						i++;
-				}
-				else
-				{
-					t += s[i];
-				}
-			t += "\"";
-		}
-		else
-		{
-			unsigned int i = 0;
-			bool qneed = (s[0] == '\"');
-			while ((!qneed)&(i < len))
-			{
-				qneed = ((s[i] == ',') | (s[i] == '\n'));
-				i++;
-			}
-			if (qneed)
-			{
-				t = "\"";
-				for (unsigned int i = 0; i < len;i++)
-				{
-					if (s[i] == '"')
-						t += "\"\"";
-					else
-						t += s[i];
-
-				}
-				t += "\"";
-			}
-			else
-			{
-				t = s;
-			}
-		}
-		return t;
-	}
-
 	int EraseCell(LI row, LI column)
 	{
 		csv_map.erase(_index(row, column));
+		return 0;
 	}
 
-	int SetCell(LI row, LI column, const string value)
+	int SetCell(LI row, LI column, const string& value)
 	{
 		unsigned int len = (unsigned)value.length();
 		if (len == 0)
 		{
 			csv_map.erase(_index(row, column));
+			return 1;
 		}
 		else
 		{
-			csv_map[_index(row, column)] = SafeStr(value);
+			csv_map[_index(row, column)] = value;
 			return 0;
 		}
 	}
@@ -319,8 +364,24 @@ public:
 			return "";
 	}
 
-	bool Search(string value, LI& row, LI& column)
+	bool GetCellDouble(LI row, LI column, double& x)
 	{
+		auto it = csv_map.find(_index(row, column));
+		if (it != csv_map.end())
+		{
+			return StrDouble(it->second,x);
+		}
+		else
+			return false;
+	}
+
+	bool Search(const string& value, LI& row, LI& column, bool is_reset = false)
+	{
+		if (is_reset)
+		{
+			row = 0;
+			column = 0;
+		}
 		for (map<LLI, string>::iterator it = csv_map.lower_bound(_index(row, column)); it != csv_map.end(); ++it)
 		{
 			if (strcmp(it->second.c_str(), value.c_str()) == 0)
@@ -408,4 +469,10 @@ public:
 		return 0;
 	}
 
+	string& operator() (const LI row, const LI column)
+	{
+		return csv_map[_index(row, column)];
+	}
+	
 };
+
