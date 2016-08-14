@@ -1,7 +1,8 @@
 /******************************************************************
 
 Introduction:
-CSVparser.h is a simple c++ libary. It can load, save and modify Microsoft Excel friendly CSV files.
+CSVparser.h is a simple c++ libary.
+It can load, save and modify Microsoft Excel friendly CSV files.
 It supports quotation marks, line breaks and commas in cell values.
 It uses std::map to store data. It supports up to 2^32 columns and rows.
 
@@ -30,6 +31,9 @@ csv.SetCell(row, column, value);
 Get cell value:
 value = csv.GetCell(row, column);
 
+Get cell value as a double:
+check=GetCellDouble(row, column, &x)
+
 Erase a cell:
 csv.EraseCell(row, column); // same as SetCell(row, column, "");
 
@@ -49,7 +53,7 @@ check = csv.Search(value, &row, &column, true);
 Iteration:
 check = csv.BeginIter(&it);
 check = csv.NextIter(&it);
-check = csv.GetIter(it, &row, &column, &str);
+csv.GetIter(it, &row, &column, &str);
 
 () Operator:
 csv(row, column)
@@ -79,11 +83,11 @@ const string PrimaryStr(const string& s)
 {
 	string t;
 	unsigned int len = (unsigned)s.length();
-	if ((len>0)&(s[0] == '"')&(s[len - 1] == '"'))
+	if ((len>0)&&(s[0] == '"')&&(s[len - 1] == '"'))
 		for (unsigned int i = 1; i < len - 1;i++)
 		{
 			t += s[i];
-			if ((s[i] == '"')&(s[i + 1] == '"'))
+			if ((s[i] == '"')&&(s[i + 1] == '"'))
 				i++;
 		}
 	else
@@ -95,7 +99,7 @@ const string SafeStr(const string& s)
 {
 	string t;
 	unsigned int len = (unsigned)s.length();
-	if ((s[0] == '"')&(s[len - 1] == '"'))
+	if ((s[0] == '"')&&(s[len - 1] == '"'))
 	{
 		t = "\"";
 		for (unsigned int i = 1; i < len - 1;i++)
@@ -115,9 +119,9 @@ const string SafeStr(const string& s)
 	{
 		unsigned int i = 0;
 		bool qneed = (s[0] == '\"');
-		while ((!qneed)&(i < len))
+		while ((!qneed)&&(i < len))
 		{
-			qneed = ((s[i] == ',') | (s[i] == '\n'));
+			qneed = ((s[i] == ',') || (s[i] == '\n'));
 			i++;
 		}
 		if (qneed)
@@ -239,7 +243,7 @@ public:
 			}
 			else if (c == ',')
 			{
-				if (qflag & dqflag)
+				if (qflag && dqflag)
 				{
 					dqflag = false;
 					qflag = false;
@@ -258,7 +262,7 @@ public:
 			}
 			else if (c == '\n')
 			{
-				if (qflag & dqflag)
+				if (qflag && dqflag)
 				{
 					dqflag = false;
 					qflag = false;
@@ -457,9 +461,8 @@ public:
 
 	void GetIter(map<LLI, string>::iterator& it, LI& row, LI& column, string& value)
 	{
-		LLI ind = it->first;
-		row = _row(ind);
-		column = _column(ind);
+		row = _row(it->first);
+		column = _column(it->first);
 		value = it->second;
 	}
 
