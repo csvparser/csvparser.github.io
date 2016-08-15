@@ -7,11 +7,6 @@ It supports quotation marks, line breaks and commas in cell values.
 It uses std::map to store data. It supports up to 2^32 columns and rows.
 
 Usage:
-Convert a string to a safe CSV string:
-value = SafeStr(str);
-
-Convert a CSV string to a primary form:
-value = PrimaryStr(str);
 
 Create a csvdata:
 csvdata csv;
@@ -61,7 +56,14 @@ csv.Clear();
 () Operator (read and write):
 csv(row, column)
 
+Convert a string to a safe CSV string:
+value = SafeStr(str);
+
+Convert a CSV string to a primary form:
+value = PrimaryStr(str);
+
 csvdata version 1.2 by Hamid Soltani. (gmail: hsoltanim)
+https://csvparser.github.io/
 Last modified: Aug. 2016.
 
 *****************************************************************************/
