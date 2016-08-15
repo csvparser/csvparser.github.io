@@ -12,11 +12,11 @@
 #include <stdio.h>
 #include <ctime>
 
-#include "CSVparser.h"
+#include "csvdata.h"
 
 int main()
 {
-	CSVdata csv;
+	csvdata csv;
 
 	// assigning some data
 	

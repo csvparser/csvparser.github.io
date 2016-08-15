@@ -21,7 +21,7 @@ CSV parser
 		Introduction:
 	</h1>
 	<p>
-		CSVparser.h is a simple c++ libary. It can load, save and modify Microsoft Excel friendly CSV files.
+		csvdata is a simple c++ class. It can load, save and modify Microsoft Excel friendly CSV files.
 	</p>
 	<p>
 		It supports quotation marks, line breaks and commas in cell values.
@@ -46,7 +46,7 @@ CSV parser
 		value = PrimaryStr(str);
 	</code>		
 	<p>
-		Create a CSVdata:
+		Create a csvdata:
 	</p>
 	<code>
 		CSVdata csv;
@@ -133,10 +133,16 @@ CSV parser
 	</code>	
 	<br>		
 	<code>		
-		check = csv.GetIter(it, &amp;row, &amp;column, &amp;str);
+		csv.GetIter(it, &amp;row, &amp;column, &amp;str);
 	</code>	
 	<p>	
-		() Operator:
+		Clear data:
+	</p>
+	<code>	
+		csv.Clear();
+	</code>		
+	<p>	
+		() Operator (read and write):
 	</p>
 	<code>	
 		csv(row, column)
@@ -146,6 +152,7 @@ CSV parser
 		Version History:
 	</h1>
 	<p>
+		v1.2: csvdata class defined in seperate .h and .cpp files </br>	
 		v1.1: Operator () added, some minor improvements </br>
 		v1.0: First Release
 	</p>
@@ -154,11 +161,14 @@ CSV parser
 		Download:
 	</h1>
 	<p>
-		Use links below to download last release of CSVparser.
+		Use links below to download latest release of CSVparser.
 	</p>
 	<p>
-		<a href="CSVparser.h">CSVparser.h</a>
+		<a href="csvdata.h">csvdata.h</a>
 	</p>
+	<p>
+		<a href="csvdata.cpp">csvdata.cpp</a>
+	</p>	
 	<p>
 		<a href="CSVexample.cpp">CSVexample.cpp</a>
 	</p>
@@ -167,7 +177,7 @@ CSV parser
 		About:
 	</h1>
 	<p>
-		CSVparser version 1.0 by Hamid Soltani.
+		csvdata version 1.2 by Hamid Soltani. (gmail: hsoltanim)
 	</p>
 	<p>
 		Last modified: Aug. 2016.
