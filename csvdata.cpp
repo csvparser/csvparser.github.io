@@ -2,12 +2,8 @@
 #include "csvdata.h"
 
 #include <map>
-#include <iostream>
 #include <fstream>
 #include <string>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 using namespace std;
 
@@ -47,14 +43,13 @@ int csvdata::LoadFile(const char* filename, bool isclear)
 {
 	if (isclear)
 		Clear();
+
 	LI row = 0;
 	LI column = 0;
 
 	string cell = "";
 
-	bool cellread = false;
 	bool qflag = false;
-	bool dqflag = false;
 
 	char c;
 
@@ -65,82 +60,50 @@ int csvdata::LoadFile(const char* filename, bool isclear)
 
 	while (is.get(c))
 	{
-		LI saverow = row;
-		LI savecolumn = column;
-		if (c == '"')
+		if (qflag)
 		{
-			if (dqflag)
+			if (c == '"')
 			{
-				dqflag = false;
+				if (is.peek() == '"')
+				{
+					is.get(c);
+					cell += c;
+				}
+				else
+					qflag = false;
 			}
 			else
-			{
-				if (qflag)
-				{
-					dqflag = true;
-				}
-				else if (cell.length() == 0)
-				{
-					qflag = true;
-				}
-			}
-			cell += c;
-		}
-		else if (c == ',')
-		{
-			if (qflag && dqflag)
-			{
-				dqflag = false;
-				qflag = false;
-				column++;
-				cellread = true;
-			}
-			else if (qflag)
-			{
 				cell += c;
-			}
-			else
-			{
-				column++;
-				cellread = true;
-			}
 		}
-		else if (c == '\n')
+		else
 		{
-			if (qflag && dqflag)
+			if ((c == '"') && (cell.length() == 0))
+				qflag = true;
+			else if (c == ',')
 			{
-				dqflag = false;
-				qflag = false;
+				if (cell.length() > 0)
+				{
+					csv_map[_index(row, column)] = cell;
+					cell = "";
+				}
+				column++;
+			}
+			else if (c == '\n')
+			{
+				if (cell.length() > 0)
+				{
+					csv_map[_index(row, column)] = cell;
+					cell = "";
+				}
 				row++;
 				column = 0;
-				cellread = true;
 			}
-			else if (qflag)
-			{
+			else if (c >= 32)
 				cell += c;
-			}
-			else
-			{
-				row++;
-				column = 0;
-				cellread = true;
-			}
-		}
-		else if (c != '\r')
-		{
-			cell += c;
-		}
-
-		if (cellread)
-		{
-			if (cell.length() > 0)
-			{
-				csv_map[_index(saverow, savecolumn)] = PrimaryStr(cell);
-				cell = "";
-			}
-			cellread = false;
 		}
 	}
+	if (cell.length() > 0)
+		csv_map[_index(row, column)] = cell;
 
 	is.close();
 	return 0;

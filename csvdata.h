@@ -62,7 +62,7 @@ value = SafeStr(str);
 Convert a CSV string to a primary form:
 value = PrimaryStr(str);
 
-csvdata version 1.2 by Hamid Soltani. (gmail: hsoltanim)
+csvdata version 1.3 by Hamid Soltani. (gmail: hsoltanim)
 https://csvparser.github.io/
 Last modified: Aug. 2016.
 
@@ -71,14 +71,6 @@ Last modified: Aug. 2016.
 #pragma once
 
 #include <map>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-using namespace std;
 
 using LI = unsigned long int;
 using LLI = unsigned long long int;
@@ -95,7 +87,7 @@ union _I {
 class csvdata
 {
 private:
-	map<LLI, string> csv_map;
+	std::map<LLI, std::string> csv_map;
 	LLI _index(LI row, LI column);
 	LI _row(LLI index);
 	LI _column(LLI index);
@@ -105,20 +97,20 @@ public:
 	int LoadFile(const char* filename, bool isclear = true);
 	int SaveFile(const char* filename);
 	int EraseCell(LI row, LI column);
-	int SetCell(LI row, LI column, const string& value);
-	string GetCell(LI row, LI column);
+	int SetCell(LI row, LI column, const std::string& value);
+	std::string GetCell(LI row, LI column);
 	bool GetCellDouble(LI row, LI column, double& x);
-	bool Search(const string& value, LI& row, LI& column, bool is_reset = false);
-	bool Find(LI row, LI column, string& value);
-	bool LBElem(LI& row, LI& column, string& value);
-	bool UBElem(LI& row, LI& column, string& value);
-	bool BeginIter(map<LLI, string>::iterator& it);
-	bool NextIter(map<LLI, string>::iterator& it);
-	void GetIter(map<LLI, string>::iterator& it, LI& row, LI& column, string& value);
+	bool Search(const std::string& value, LI& row, LI& column, bool is_reset = false);
+	bool Find(LI row, LI column, std::string& value);
+	bool LBElem(LI& row, LI& column, std::string& value);
+	bool UBElem(LI& row, LI& column, std::string& value);
+	bool BeginIter(std::map<LLI, std::string>::iterator& it);
+	bool NextIter(std::map<LLI, std::string>::iterator& it);
+	void GetIter(std::map<LLI, std::string>::iterator& it, LI& row, LI& column, std::string& value);
 	int Clear();
-	string& operator() (const LI row, const LI column);
+	std::string& operator() (const LI row, const LI column);
 };
 
-const string PrimaryStr(const string& s);
-const string SafeStr(const string& s);
-bool StrDouble(const string s, double& x);
+const std::string PrimaryStr(const std::string& s);
+const std::string SafeStr(const std::string& s);
+bool StrDouble(const std::string s, double& x);
