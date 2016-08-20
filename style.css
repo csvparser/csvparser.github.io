@@ -5,33 +5,30 @@
 	font-family: Verdana;
 	text-decoration: none;
 	line-height: 200%;
-	color: #fff;	
 }
 
 a  {
-	color: #f5cba7;
+	color: #d35400;
 }
 
 a:hover {	
-	color: #eb984e;
+	color:  #6e2c00 
 }
 
 code {
 	font-size: 125%;
 	font-family: monospace;
 	margin-left: 2em;
-	color: #eb984e;	
+	color:  #6e2c00;
 }
 
 .topsection {
 	padding: 10px;
-	background: #17202a;
+	background: #e59866;
 	width: 100%;
 }
 
 .mainsection {
-	padding: 20px;
-	background: #154360;	
+	padding: 20px;	
 	width: 100%;
 }
-
