@@ -1,54 +1,3 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head>
-<title>
-Some simple C++ programs
-</title>
-<link rel="stylesheet" type="text/css" href="style.css">
-<link href="shCore.css" rel="stylesheet" type="text/css" />
-<link href="shThemeDefault.css" rel="stylesheet" type="text/css" />
-</head>
-
-<body onload="putfields();">
-<div class="bodysection">
-
-<div class="topsection">
-	<h1>
-		CSV parser in C++
-	</h1>
-</div>
-
-<div class="mainsection">
-	<p>
-		<a href="index.html">Back to Home</a>
-	</p>
-	<h1>
-		Introduction:
-	</h1>
-	<p>
-		csvparser is a simple c++ program. It can load, save and modify Microsoft Excel friendly CSV files.
-	</p>
-	<p>
-		It supports quotation marks, line breaks and commas in cell values.
-	</p>
-	<p>
-		It uses std::map to store data. It supports up to 2^32 columns and rows.
-	</p>
-
-	<h1>
-		About:
-	</h1>
-	<p>
-		csvparser by Hamid Soltani. (gmail: hsoltanim)
-	</p>	
-	
-	<h1>
-		Code:
-	</h1>
-	<p>
-		Download <a href="csvparser.cpp">csvparser.cpp</a>
-	</p>	
-<pre class='brush: cpp'>
 /****************************************************************************
 
 Introduction:
@@ -636,14 +585,3 @@ int main()
 
 	return 0;
 }
-</pre>
-</div>
-
-</div>
-<script src="shCore.js"></script>
-<script src="shBrushCpp.js"></script>
-<script>
-	SyntaxHighlighter.all()
-</script>
-</body>
-</html>

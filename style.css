@@ -8,23 +8,12 @@
 }
 
 a  {
-	color: #d35400;
-}
-
-a:hover {	
-	color:  #6e2c00 
-}
-
-code {
-	font-size: 125%;
-	font-family: monospace;
-	margin-left: 2em;
-	color:  #6e2c00;
+	color: #2e86c1;
 }
 
 .topsection {
 	padding: 10px;
-	background: #e59866;
+	background: #85c1e9;
 	width: 100%;
 }
 

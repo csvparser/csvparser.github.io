@@ -27,11 +27,11 @@ Last modified: Aug. 2016.
 
 #include "stdafx.h"
 
-#include <iostream>
-#include <cstdlib>
-#include <cctype>
-#include <cstring>
-#include <math.h> 
+#include < iostream >
+#include < cstdlib >
+#include < cctype >
+#include < cstring >
+#include < math.h > 
 
 #define PI 3.14159265358979323846 
 
@@ -61,7 +61,7 @@ parser::parser()
 {
 	int i;
 	exp_ptr = NULL;
-	for (i = 0; i<NUMVARS; i++)
+	for (i = 0; i < NUMVARS; i++)
 		vars[i] = 0.0;
 	errormsg[0] = '\0';
 }
