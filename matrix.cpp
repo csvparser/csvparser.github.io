@@ -377,8 +377,8 @@ public:
 			for (int r = 0; r < M.rows; r++)
 				for (int c = 0; c < M.cols; c++)
 					os << ((c==0) ? ((r == 0) ? "[" : " ") : "")
-					<< setw(10) << setprecision(4) << M.p[r][c] <<
-					((c == M.cols - 1) ? ((r == M.rows - 1) ? "]" : ";\n") : ",");
+					   << setw(10) << setprecision(4) << M.p[r][c] 
+					   << ((c == M.cols - 1) ? ((r == M.rows - 1) ? "]" : ";\n") : ",");
 		else
 			os << "[ ]";
 		return os;
@@ -477,9 +477,9 @@ void Swap(double& a, double& b)
 }
 
 /*
-* returns the inverse of Matrix a
+* returns the inverse of Matrix a, Stores determinent in DT
 */
-Matrix Inv(const Matrix& a)
+Matrix Inv(const Matrix& a, double& DT)
 {
 	Matrix res;
 	int rows = a.GetRows();
@@ -496,7 +496,7 @@ Matrix Inv(const Matrix& a)
 	//   http://math.uww.edu/~mcfarlat/inverse.htm
 	res = Diag(rows);   // a diagonal matrix with ones at the diagonal
 	Matrix ai = a;    // make a copy of Matrix a
-	lastDet = 1;
+	DT = 1;
 	for (int c = 1; c <= cols; c++)
 	{
 		// element (c, c) should be non zero. if not, swap content
@@ -505,6 +505,7 @@ Matrix Inv(const Matrix& a)
 		for (r = c; r <= rows && ai(r, c) == 0; r++) {	}
 		if (r >rows)
 		{
+			DT = 0;
 			throw Exception("Determinant of matrix is zero");
 			return res;
 		}
@@ -542,7 +543,7 @@ Matrix Inv(const Matrix& a)
 				// make value at (c, c) one,
 				// divide each value on row r with the value at ai(c,c)
 				double f = ai(c, c);
-				lastDet *= f;
+				DT *= f;
 				for (int s = 1; s <= cols; s++)
 				{
 					ai(r, s) /= f;
@@ -552,6 +553,13 @@ Matrix Inv(const Matrix& a)
 		}
 	}
 	return res;
+}
+/*
+* returns the inverse of Matrix a, Stores determinent in lastDet
+*/
+Matrix Inv(const Matrix& a)
+{
+	return Inv(a, lastDet);
 }
 
 int main(int argc, char *argv[])
