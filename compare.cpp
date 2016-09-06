@@ -9,6 +9,7 @@ Last modified: Sep. 2016.
 #include "stdafx.h"
 #include < bitset >
 #include < iostream >
+#include < math.h >
 
 using namespace std;
 
