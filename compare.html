@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>
+Some simple C++ programs
+</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<link href="shCore.css" rel="stylesheet" type="text/css" />
+<link href="shThemeDefault.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body onload="putfields();">
+<div class="bodysection">
+
+<div class="topsection">
+	<h1>
+		Compare Double Numbers
+	</h1>
+</div>
+
+<div class="mainsection">
+	<p>
+		<a href="index.html">Back to Home</a>
+	</p>
+	<h1>
+		Introduction:
+	</h1>
+	<p>
+		compare is a c++ program to compare two double numbers when insignificant bits not considered.
+	</p>	
+	<h1>
+		Code:
+	</h1>
+	<p>
+		Download <a href="compare.cpp">compare.cpp</a>
+	</p>
+<pre class='brush: cpp'>
+/****************************************************************************
+compare is a c++ program to compare two double numbers 
+when insignificant bits not considered.
+by Hamid Soltani. (gmail: hsoltanim)
+https://csvparser.github.io/
+Last modified: Sep. 2016.
+*****************************************************************************/
+
+#include "stdafx.h"
+#include < bitset >
+#include < iostream >
+
+using namespace std;
+
+#define unImpBits 4
+
+union bits64 {
+	double x;
+	unsigned long long i;
+};
+
+double rounded(double r)
+{
+	bits64 v;
+	v.x = r;
+	v.i = v.i >> unImpBits << unImpBits;
+	return v.x;
+}
+
+int main()
+{
+	double a = 0.2;
+	double b = 1 / sqrt(5) / sqrt(5);
+	cout << "Comparing a, b:\n";
+	cout << "All bits considered: "
+		<< ((a == b) ? "Eqaul" : "Not equal") << endl;
+	cout << unImpBits << " insignificant bits not considered: " 
+		<< ((rounded(a) == rounded(b)) ? "Eqaul" : "Not equal") << endl;
+	cout << "Press Enter to exit...\n";
+	getchar();
+	return 0;
+}
+</pre>
+</div>
+
+</div>
+<script src="shCore.js"></script>
+<script src="shBrushCpp.js"></script>
+<script>
+	SyntaxHighlighter.all()
+</script>
+</body>
+</html>
