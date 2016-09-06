@@ -24,7 +24,7 @@ double rounded(double r)
 {
 	bits64 v;
 	v.x = r;
-	v.i = v.i >> unImpBits << unImpBits;
+	v.i = (v.i + (1 << (unImpBits - 1))) >> unImpBits << unImpBits;
 	return v.x;
 }
 
