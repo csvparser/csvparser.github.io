@@ -65,14 +65,43 @@ double rounded(double r)
 	return v.x;
 }
 
+bool isequal(double a, double b)
+{
+	bits64 mx;
+	bits64 mn;
+	mx.x = a;
+	mn.x = b;
+	if (mx.i < mn.i)
+	{
+		mx.x = b;
+		mn.x = a;
+	}
+	if ((mx.i << 1) == 0) mx.i = 0;
+	if ((mn.i << 1) == 0) mn.i = 0;
+	return (mx.i - mn.i <= (1 << unImpBits));
+}
+
 int main()
 {
-	double a = 0.2;
-	double b = 1 / sqrt(5) / sqrt(5);
+	double a = -4;
+	double b = -100 / sqrt(5) / sqrt(5) / sqrt(5) / sqrt(5);
+	bits64 _a, _b;
+	_a.x = a;
+	_b.x = b;
+	bitset<64> __a = _a.i;
+	bitset<64> __b = _b.i;
+	cout << "        a: " << __a << "\n        b: " << __b << "\n" << "\n";
+	_a.x = rounded(a);
+	_b.x = rounded(b);
+	__a = _a.i;
+	__b = _b.i;
+	cout << "Rounded a: " << __a << "\nRounded b: " << __b << "\n" << "\n";
 	cout << "Comparing a, b:\n";
 	cout << "All bits considered: "
 		<< ((a == b) ? "Eqaul" : "Not equal") << endl;
-	cout << unImpBits << " insignificant bits not considered: " 
+	cout << unImpBits << " insignificant bits not considered: "
+		<< (isequal(a, b) ? "Eqaul" : "Not equal") << endl;
+	cout << "Rounded to " << unImpBits << " bits: " 
 		<< ((rounded(a) == rounded(b)) ? "Eqaul" : "Not equal") << endl;
 	cout << "Press Enter to exit...\n";
 	getchar();
