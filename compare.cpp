@@ -14,6 +14,8 @@ Last modified: Sep. 2016.
 using namespace std;
 
 #define unImpBits 4
+#define bitsTol (1 << unImpBits)
+#define almostZero (bitsTol << 1)
 
 union bits64 {
 	double x;
@@ -39,15 +41,17 @@ bool isequal(double a, double b)
 		mx.x = b;
 		mn.x = a;
 	}
-	if ((mx.i << 1) == 0) mx.i = 0;
-	if ((mn.i << 1) == 0) mn.i = 0;
-	return (mx.i - mn.i <= (1 << unImpBits));
+	// Check if it is zero not considering insignificant bits
+	if ((mx.i << 1) < almostZero)
+		return ((mn.i << 1) < almostZero);
+	return (mx.i < mn.i + bitsTol);
 }
 
 int main()
 {
 	double a = -4;
 	double b = -100 / sqrt(5) / sqrt(5) / sqrt(5) / sqrt(5);
+	// a = 0.0; b = -0.0;
 	bits64 _a, _b;
 	_a.x = a;
 	_b.x = b;
