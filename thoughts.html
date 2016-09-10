@@ -38,9 +38,9 @@ Some simple C++ programs
 	int a;
 	unsigned int b;
 	a=-1;
-	b=$a;									// copy a to b bit by bit
+	b=$a;									// copy variable a to variable b bit by bit
 	
-	double x;=1.23							// copy a double variable bits to an int variable to
+	double x=1.23;							// copy a double variable bits to an int variable to
 	unsigned long long i=$x;				// easily perform bit operation by copy to an int variable 
 </pre>
 	<p>
@@ -92,7 +92,7 @@ $(int, int) minmax(int a, int b)
 	for (i:[a:b])							// same as for (i = a; i <= b; i++)
 		doSomething;
 	// it can be extended to below definitions:
-	// [a:b]			a > b		(i = a; i >= b; i--)
+	// [a:b] & a > b				(i = a; i >= b; i--)
 	// [a:step:b]					(i = a; i <= b; i+=step)
 	// [a:b[						(i = a; i < b; i++)
 	// ]a:b]						(i = a+1; i <= b; i++)
@@ -174,14 +174,18 @@ $(int, int) minmax(int a, int b)
 			}
 </pre>
 	<p>
-		"onbreak" can be defined as below:
+		"onbreak" can be defined as below: (the same for "oncontinue")
 	</p>
 <pre class='brush: cpp'>
 	for (i:[a,b])
 	{
 		doSomething;
-		if (expr)
+		if (expr1)
 			break;
+		if (expr2)
+			continue;			
+	} oncontinue {
+		...
 	} onbreak {
 		...
 	}	
@@ -190,7 +194,7 @@ $(int, int) minmax(int a, int b)
 		Formatted input
 	</h2>
 	<p>
-		Suppose a comma separated values file is read. How about using constants in Input statements:
+		Suppose a comma separated values list. How about using constants in Input statements:
 	</p>
 <pre class='brush: cpp'>
 	cin >> a >> "," >> b >> "," >> c;
