@@ -645,11 +645,11 @@ int main(int argc, char *argv[])
 			for (int j = 1; j <= test;j++)
 				if (i == j)
 				{
-					if (d1 > M(i, j)) d1 = MMI(i, j);
-					if (d2 < M(i, j)) d2 = MMI(i, j);
+					if (d1 > MMI(i, j)) d1 = MMI(i, j);
+					if (d2 < MMI(i, j)) d2 = MMI(i, j);
 				} else {
-					if (e1 > M(i, j)) e1 = MMI(i, j);
-					if (e2 < M(i, j)) e2 = MMI(i, j);
+					if (e1 > MMI(i, j)) e1 = MMI(i, j);
+					if (e2 < MMI(i, j)) e2 = MMI(i, j);
 				}
 		typedef numeric_limits< double > dbl;
 		cout  << setprecision (dbl::max_digits10)
