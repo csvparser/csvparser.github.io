@@ -53,6 +53,7 @@ you can quick-print the content of a matrix with << operator
 
 #include < iostream >
 #include < iomanip > 
+#include < limits >
 using namespace std;
 
 // Declarations
@@ -477,7 +478,7 @@ void Swap(double& a, double& b)
 }
 
 /*
-* returns the inverse of Matrix a, Stores determinent in DT
+* returns the inverse of Matrix a, stores determinent in DT
 */
 Matrix Inv(const Matrix& a, double& DT)
 {
@@ -555,7 +556,7 @@ Matrix Inv(const Matrix& a, double& DT)
 	return res;
 }
 /*
-* returns the inverse of Matrix a, Stores determinent in lastDet
+* returns the inverse of Matrix a, stores determinent in lastDet
 */
 Matrix Inv(const Matrix& a)
 {
@@ -616,6 +617,44 @@ int main(int argc, char *argv[])
 			for (int c = 1; c <= cols; c++)
 				H(r, c) = ++count;
 		cout << "H= \n" << H << "\n";
+
+		int test = 1000;
+		int band = 20;
+		cout << "\n\nCreating a " << test << "*" << test
+			<< " Matrix with " << 2 * band + 1
+			<< " non-zero middle elements at each row, please wait...";
+
+		Matrix M = Matrix(test, test);
+		for (int i = 1;i <= test;i++)
+		{
+			int a = (i <= band) ? 1 : i - band;
+			int b = (i > test - band) ? test : i + band;
+			for (int j = a;j <= b;j++)
+				M(i, j) = 1.0 + rand() % 10;
+		}
+		cout << "\n\nComputing Inv M, please wait...";
+		Matrix MI = Inv(M);
+		cout << "\n\nComputing M*Inv M, please wait...";
+		Matrix MMI = M*Inv(M);
+
+		double e1 = 1e300;
+		double d1 = e1;
+		double e2 = -e1;
+		double d2 = e2;
+		for (int i = 1; i <= test;i++)
+			for (int j = 1; j <= test;j++)
+				if (i == j)
+				{
+					if (d1 > M(i, j)) d1 = MMI(i, j);
+					if (d2 < M(i, j)) d2 = MMI(i, j);
+				} else {
+					if (e1 > M(i, j)) e1 = MMI(i, j);
+					if (e2 < M(i, j)) e2 = MMI(i, j);
+				}
+		typedef numeric_limits< double > dbl;
+		cout  << setprecision (dbl::max_digits10)
+			<< "\n\nDiagonal elements ranging from " << d1 << " to " << d2
+			<< "\nNon-diagonal elements ranging from " << e1 << " to " << e2;
 	}
 	catch (Exception err)
 	{
@@ -626,10 +665,8 @@ int main(int argc, char *argv[])
 		cout << "An error occured...\n";
 	}
 
-	cout << "Press Enter to exit...\n";
+	cout << "\n\nPress Enter to exit...\n";
 	getchar();
 
 	return EXIT_SUCCESS;
 }
-
-
