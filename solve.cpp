@@ -19,15 +19,6 @@ Last modified: Sep. 2016.
 
 using namespace std;
 
-// Declarations
-class Matrix;
-static double lastDet; // Determinant computed by Inv function
-Matrix Diag(const int n);
-Matrix Diag(const Matrix& v);
-Matrix Inv(const Matrix& a);
-Matrix Ones(const int rows, const int cols);
-Matrix Zeros(const int rows, const int cols);
-
 using Dimension = unsigned long int;
 using Index = unsigned long long int;
 union Access {
@@ -60,6 +51,15 @@ Dimension getMatrixRow(Index i)
 	return m.at.r;
 }
 
+// Declarations
+class Matrix;
+static double lastDet; // Determinant computed by Inv function
+Matrix Diag(const Dimension n);
+Matrix Diag(const Matrix& v);
+Matrix Inv(const Matrix& a);
+Matrix Ones(const Dimension rows, const Dimension cols);
+Matrix Zeros(const Dimension rows, const Dimension cols);
+
 /*
 * a simple exception class
 * you can create an exeption by entering: throw Exception("...Error description...");
@@ -89,7 +89,7 @@ public:
 	}
 
 	// constructor
-	Matrix(const int row_count, const int column_count)
+	Matrix(const Dimension row_count, const Dimension column_count)
 	{
 		// create a Matrix object with given number of rows and columns
 		rows = row_count;
@@ -117,8 +117,6 @@ public:
 			throw Exception("Subscript out of range");
 	}
 
-	// index operator. You can use this class like myMatrix(col, row)
-	// the indexes are one-based, not zero based.
 	// use this function get if you want to read from a const Matrix
 	double get(const Dimension r, const Dimension c) const
 	{
@@ -131,6 +129,7 @@ public:
 			throw Exception("Subscript out of range");
 	}
 
+	// set matrix element
 	void set(const Dimension r, const Dimension c, const double v)
 	{
 		if (r > 0 && r <= rows && c > 0 && c <= cols)
@@ -623,7 +622,6 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		}
 	}
 	for (Dimension r = n;r >= 1;r--)
-	{
 		for (Dimension eq = 1; eq <= eqn; eq++)
 		{
 			double temp = 0.0;
@@ -634,7 +632,6 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 				temp += t*vi(c, eq);
 			vi.set(r, eq, (vi(r, eq) - temp) / ai(r, r));
 		}
-	}
 	// cout << "\nSize ai:" << ai.Size() << "\n";
 	// cout << ai << "\n";
 	return vi;
@@ -701,8 +698,7 @@ int main(int argc, char *argv[])
 			cout << X1(i,1) << " , " << X2(i, 1) << "\n";
 		cout << "\nInv(M)*N computation time:    " << (double)(t2 - t1) / CLOCKS_PER_SEC;
 		cout << "\nSolve(M, N) computation time: " << (double)(t3 - t2) / CLOCKS_PER_SEC;
-		cout << "\n";
-		
+		cout << "\n";	
 	}
 	catch (Exception err)
 	{
