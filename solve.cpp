@@ -602,9 +602,9 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 				// add (f * row c) to row r to eleminate the value
 				// at column c
 				ai.set(r, c, 0.0);
+				/*
 				Dimension first;
 				Dimension last;
-				/*
 				ai.inRow(c, first, last);
 				for (Dimension s = c + 1; s <= last; s++)
 					ai.set(r, s, ai(r, s) + f *ai(c, s));
