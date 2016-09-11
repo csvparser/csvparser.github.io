@@ -657,10 +657,9 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 				for (Dimension s = c + 1; s <= last; s++)
 					ai.set(r, s, ai(r, s) + f *ai(c, s));
 					*/
-				bool check = true;
 				Dimension s = c;
 				Dimension ci = c;
-				for (check = ai.next(ci, s, t);(check && (ci == c));check = ai.next(ci, s, t))
+				while (ai.next(ci, s, t) && (ci == c))
 					ai.set(r, s, ai(r, s) + f *t);
 				vi.set(r, 1, vi(r, 1) + f *vi(c, 1));
 			}
