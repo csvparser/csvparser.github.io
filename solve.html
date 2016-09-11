@@ -205,10 +205,10 @@ public:
 		return true;
 	}
 
-	// next non-zero element
+	// next non-zero element, r and c can be 0 to get first element in a row/matrix
 	bool next(Dimension& r, Dimension& c, double& v)
 	{
-		if (r <= 0 || r > rows || c <= 0 || c > cols)
+		if (r < 0 || r > rows || c < 0 || c > cols)
 		{
 			throw Exception("Subscript out of range");
 			return false;
@@ -605,7 +605,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 	Matrix vi;
 	Dimension n = a.GetRows();
 
-	if (a.GetCols() != n || v.GetRows() != n || v.GetCols() != 1)
+	if (a.GetCols() != n || v.GetRows() != n)
 	{
 		throw Exception("Invalid dimensions");
 		return vi;
@@ -613,6 +613,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 
 	Matrix ai = a;    // make a copy of Matrix a
 	vi = v;
+	Dimension eqn = v.GetCols(); // number of equation sets
 	
 	for (Dimension c = 1; c <= n; c++)
 	{
@@ -628,24 +629,28 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		if (r != c)
 		{
 			// swap rows
-			double temp = vi(c, 1);
-			vi.set(c, 1, vi(r, 1));
-			vi.set(r, 1, temp);
 			for (Dimension s = 1; s <= n; s++)
 			{
-				temp = ai(c, s);
+				double temp = ai(c, s);
 				ai.set(c, s, ai(r, s));
 				ai.set(r, s, temp);
+			}
+			for (Dimension eq = 1; eq <= eqn; eq++)
+			{
+				double temp = vi(c, eq);
+				vi.set(c, eq, vi(r, eq));
+				vi.set(r, eq, temp);
 			}
 		}
 
 		// eliminate non-zero values on below rows
+		double tc = ai(c, c);
 		for (Dimension r = c + 1; r <= n; r++)
 		{
 			double t = ai(r, c);
 			if (t != 0.0)
 			{
-				double f = -t / ai(c, c);
+				double f = -t / tc;
 
 				// add (f * row c) to row r to eleminate the value
 				// at column c
@@ -667,10 +672,16 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 	}
 	for (Dimension r = n;r >= 1;r--)
 	{
-		double temp = 0;
-		for (Dimension c = n;c > r;c--)
-			temp += ai(r, c)*vi(c, 1);
-		vi.set(r, 1, (vi(r, 1) - temp) / ai(r, r));
+		for (Dimension eq = 1; eq <= eqn; eq++)
+		{
+			double temp = 0.0;
+			double t;
+			Dimension c = r;
+			Dimension ri = r;
+			while (ai.next(ri, c, t) && (ri == r))
+				temp += t*vi(c, eq);
+			vi.set(r, eq, (vi(r, eq) - temp) / ai(r, r));
+		}
 	}
 	// cout << "\nSize ai:" << ai.Size() << "\n";
 	// cout << ai << "\n";
@@ -711,12 +722,11 @@ int main(int argc, char *argv[])
 
 		cout << "\n\n\n";
 
-		Dimension test = 50;
+		Dimension test = 100;
 		Dimension band = 5;
 		cout << "Creating a " << test << "*" << test
 			<< " Matrix with " << 2 * band + 1
 			<< " non-zero middle elements at each row, please wait...";
-
 		Matrix M = Matrix(test, test);
 		Matrix N = Matrix(test, 1);
 		for (Dimension i = 1;i <= test;i++)
@@ -727,7 +737,9 @@ int main(int argc, char *argv[])
 				M.set(i, j, 1.0 + rand() % 10);
 			N.set(i, 1, 1.0 + rand() % 10);
 		}
+		// cout << "\nM=\n" << M << "\n";
 		clock_t t1 = clock();
+		// Matrix X1 = N;
 		Matrix X1 = Inv(M)*N;
 		clock_t t2 = clock();
 		Matrix X2 = Solve(M, N);
