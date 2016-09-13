@@ -138,33 +138,22 @@ public:
 			throw Exception("Subscript out of range");
 	}
 
-	// first and last non-zero element of row r
-	bool inRow(const Dimension r, Dimension& first, Dimension& last)
+	// begin iteration, next element after [r, c]
+	bool beginIter(map< Index, double >::iterator& it, Dimension& r, Dimension& c, double& v)
 	{
-		if (r <= 0 || r > rows)
-		{
-			throw Exception("Subscript out of range");
+		it = mp.upper_bound(getMatrixIndex(r, c));
+		if (it == mp.end())
 			return false;
-		}
-		auto it = mp.upper_bound(getMatrixIndex(r, 0));
-		if (it == mp.end() || getMatrixRow(it->first) != r)
-			return false;
-		first = getMatrixColumn(it->first);
-		it = mp.lower_bound(getMatrixIndex(r + 1, 0));
-		it--;
-		last = getMatrixColumn(it->first);
+		r = getMatrixRow(it->first);
+		c = getMatrixColumn(it->first);
+		v = it->second;
 		return true;
 	}
 
-	// next non-zero element, r and c can be 0 to get first element in a row/matrix
-	bool next(Dimension& r, Dimension& c, double& v)
+	// next iteration
+	bool nextIter(map< Index, double >::iterator& it, Dimension& r, Dimension& c, double& v)
 	{
-		if (r < 0 || r > rows || c < 0 || c > cols)
-		{
-			throw Exception("Subscript out of range");
-			return false;
-		}
-		auto it = mp.upper_bound(getMatrixIndex(r, c));
+		it++;
 		if (it == mp.end())
 			return false;
 		r = getMatrixRow(it->first);
@@ -553,6 +542,8 @@ Matrix Inv(const Matrix& a)
 */
 Matrix Solve(const Matrix& a, const Matrix& v)
 {
+	map< Index, double >::iterator it;
+
 	Matrix vi;
 	Dimension n = a.GetRows();
 
@@ -565,7 +556,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 	Matrix ai = a;    // make a copy of Matrix a
 	vi = v;
 	Dimension eqn = v.GetCols(); // number of equation sets
-	
+
 	for (Dimension c = 1; c <= n; c++)
 	{
 		// element (c, c) should be non zero. if not, swap content
@@ -611,12 +602,16 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 				Dimension last;
 				ai.inRow(c, first, last);
 				for (Dimension s = c + 1; s <= last; s++)
-					ai.set(r, s, ai(r, s) + f *ai(c, s));
-					*/
+				ai.set(r, s, ai(r, s) + f *ai(c, s));
+				*/
 				Dimension s = c;
 				Dimension ci = c;
-				while (ai.next(ci, s, t) && (ci == c))
+				bool check = ai.beginIter(it, ci, s, t);
+				while (check && (ci == c))
+				{
 					ai.set(r, s, ai(r, s) + f *t);
+					check = ai.nextIter(it, ci, s, t);
+				}
 				vi.set(r, 1, vi(r, 1) + f *vi(c, 1));
 			}
 		}
@@ -628,8 +623,12 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 			double t;
 			Dimension c = r;
 			Dimension ri = r;
-			while (ai.next(ri, c, t) && (ri == r))
+			bool check = ai.beginIter(it, ri, c, t);
+			while (check && (ri == r))
+			{
 				temp += t*vi(c, eq);
+				check = ai.nextIter(it, ri, c, t);
+			}
 			vi.set(r, eq, (vi(r, eq) - temp) / ai(r, r));
 		}
 	// cout << "\nSize ai:" << ai.Size() << "\n";
@@ -637,6 +636,91 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 	return vi;
 }
 
+// addition of Matrix with Matrix
+Matrix addMatrix(Matrix& a, Matrix& b)
+{
+	map< Index, double >::iterator ita;
+	map< Index, double >::iterator itb;
+	// check if the dimensions match
+	if (a.GetRows() == b.GetRows() && a.GetCols() == b.GetCols())
+	{
+		Matrix res(a.GetRows(), a.GetCols());
+		Dimension ra = 0;
+		Dimension ca = 0;
+		Dimension rb = 0;
+		Dimension cb = 0;
+		double ta, tb;
+		bool checka = a.beginIter(ita, ra, ca, ta);
+		bool checkb = b.beginIter(itb, rb, cb, tb);
+		while (checka || checkb)
+		{
+			if (checka && checkb && ita->first == itb->first)
+			{
+				res.set(ra, ca, ta + tb);
+				checka = a.nextIter(ita, ra, ca, ta);
+				checkb = b.nextIter(itb, rb, cb, tb);
+			}
+			if (!checkb || ita->first < itb->first)
+			{
+				res.set(ra, ca, ta);
+				checka = a.nextIter(ita, ra, ca, ta);
+			}
+			if (!checka || itb->first < ita->first)
+			{
+				res.set(rb, cb, tb);
+				checkb = b.nextIter(itb, rb, cb, tb);
+			}
+		}
+		return res;
+	}
+	else
+		throw Exception("Dimensions does not match");
+	// return an empty matrix (this never happens but just for safety)
+	return Matrix();
+}
+
+// subtraction of Matrix with Matrix
+Matrix subMatrix(Matrix& a, Matrix& b)
+{
+	map< Index, double >::iterator ita;
+	map< Index, double >::iterator itb;
+	// check if the dimensions match
+	if (a.GetRows() == b.GetRows() && a.GetCols() == b.GetCols())
+	{
+		Matrix res(a.GetRows(), a.GetCols());
+		Dimension ra = 0;
+		Dimension ca = 0;
+		Dimension rb = 0;
+		Dimension cb = 0;
+		double ta, tb;
+		bool checka = a.beginIter(ita, ra, ca, ta);
+		bool checkb = b.beginIter(itb, rb, cb, tb);
+		while (checka || checkb)
+		{
+			if (checka && checkb && ita->first == itb->first)
+			{
+				res.set(ra, ca, ta - tb);
+				checka = a.nextIter(ita, ra, ca, ta);
+				checkb = b.nextIter(itb, rb, cb, tb);
+			}
+			if (!checkb || ita->first < itb->first)
+			{
+				res.set(ra, ca, ta);
+				checka = a.nextIter(ita, ra, ca, ta);
+			}
+			if (!checka || itb->first < ita->first)
+			{
+				res.set(rb, cb, -tb);
+				checkb = b.nextIter(itb, rb, cb, tb);
+			}
+		}
+		return res;
+	}
+	else
+		throw Exception("Dimensions does not match");
+	// return an empty matrix (this never happens but just for safety)
+	return Matrix();
+}
 
 int main(int argc, char *argv[])
 {
@@ -670,9 +754,29 @@ int main(int argc, char *argv[])
 		cout << "Solve(A, V)= \n" << Solve(A, V) << "\n";
 
 		cout << "\n\n\n";
+		
+		Dimension nadd = 5;
+		Matrix A1 = Matrix(nadd, nadd);
+		Matrix A2 = Matrix(nadd, nadd);
+
+		// fill in some values in matrix a
+		count = 0;
+		for (Dimension r = 1; r <= nadd; r++)
+		{
+			A1.set(r, 1, ++count);
+			A2.set(r, r, ++count);
+		}
+		cout << "A1= \n" << A1 << "\n";
+		cout << "A2= \n" << A2 << "\n";
+
+		Matrix A3 = A1 - A2;
+		Matrix A4 = subMatrix(A1, A2);
+		cout << "A1-A2= \n" << A3 << "\n";
+		cout << "A1-A2= \n" << A4 << "\n";
+		cout << "\n\n\n";
 
 		Dimension test = 100;
-		Dimension band = 5;
+		Dimension band = 20;
 		cout << "Creating a " << test << "*" << test
 			<< " Matrix with " << 2 * band + 1
 			<< " non-zero middle elements at each row, please wait...";
@@ -695,10 +799,10 @@ int main(int argc, char *argv[])
 		clock_t t3 = clock();
 		cout << "\nInv(M)*N, Solve(M, N)= \n";
 		for (Dimension i = 1;i <= test;i++)
-			cout << X1(i,1) << " , " << X2(i, 1) << "\n";
+			cout << X1(i, 1) << " , " << X2(i, 1) << "\n";
 		cout << "\nInv(M)*N computation time:    " << (double)(t2 - t1) / CLOCKS_PER_SEC;
 		cout << "\nSolve(M, N) computation time: " << (double)(t3 - t2) / CLOCKS_PER_SEC;
-		cout << "\n";	
+		cout << "\n";
 	}
 	catch (Exception err)
 	{
