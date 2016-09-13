@@ -77,7 +77,7 @@ union Access {
 	} at;
 };
 
-Index getMatrixIndex(Dimension r, Dimension c)
+inline Index getMatrixIndex(Dimension r, Dimension c)
 {
 	union Access m;
 	m.at.r = r;
@@ -85,34 +85,28 @@ Index getMatrixIndex(Dimension r, Dimension c)
 	return m.i;
 }
 
-Dimension getMatrixColumn(Index i)
+inline void getMatrixRC(Index i, Dimension& r, Dimension& c)
 {
 	union Access m;
 	m.i = i;
-	return m.at.c;
+	r = m.at.r;
+	c = m.at.c;
 }
 
-Dimension getMatrixRow(Index i)
-{
-	union Access m;
-	m.i = i;
-	return m.at.r;
-}
-
-// Declarations
-class Matrix;
 static double lastDet; // Determinant computed by Inv function
 
-/*
-* a simple exception class
-* you can create an exeption by entering: throw Exception("...Error description...");
-* and get the error message from the data msg for displaying: err.msg
-*/
+// error codes
+#define MER_OUT_OF_RANGE 1
+#define MER_INVALID_DIMS 2
+#define MER_ZERO_DET 3
+#define MER_NOT_SQUARE 4
+
+// a simple exception class
 class Exception
 {
 public:
-	const char* msg;
-	Exception(const char* arg) : msg(arg) {	}
+	const int code;
+	Exception(const int arg) : code(arg) {	}
 };
 
 
@@ -151,34 +145,21 @@ public:
 	// the indexes are one-based, not zero based.
 	const double operator()(const Dimension r, const Dimension c) const
 	{
-		if (r > 0 && r <= rows && c > 0 && c <= cols)
-		{
-			auto it = mp.find(getMatrixIndex(r, c));
-			return ((it != mp.end()) ? it->second : 0.0);
-		}
-		else
-			throw Exception("Subscript out of range");
-	}
-
-	// use this function get if you want to read from a const Matrix
-	double get(const Dimension r, const Dimension c) const
-	{
-		if (r > 0 && r <= rows && c > 0 && c <= cols)
-		{
-			auto it = mp.find(getMatrixIndex(r, c));
-			if (it != mp.end()) return it->second; else return 0.0;
-		}
-		else
-			throw Exception("Subscript out of range");
+		if (r <= 0 || r > rows || c <= 0 || c > cols)
+			throw Exception(MER_OUT_OF_RANGE);
+		auto it = mp.find(getMatrixIndex(r, c));
+		return ((it != mp.end()) ? it->second : 0.0);
 	}
 
 	// set matrix element
 	void set(const Dimension r, const Dimension c, const double v)
 	{
-		if (r > 0 && r <= rows && c > 0 && c <= cols)
-			if (v == 0.0) mp.erase(getMatrixIndex(r, c)); else mp[getMatrixIndex(r, c)] = v;
-		else
-			throw Exception("Subscript out of range");
+		if (r <= 0 || r > rows || c <= 0 || c > cols)
+			throw Exception(MER_OUT_OF_RANGE);
+		if (v == 0.0) 
+			mp.erase(getMatrixIndex(r, c)); 
+		else 
+			mp[getMatrixIndex(r, c)] = v;
 	}
 
 	// begin iteration, next element after [r, c]
@@ -187,8 +168,7 @@ public:
 		it = mp.upper_bound(getMatrixIndex(r, c));
 		if (it == mp.end())
 			return false;
-		r = getMatrixRow(it->first);
-		c = getMatrixColumn(it->first);
+		getMatrixRC(it->first, r, c);
 		v = it->second;
 		return true;
 	}
@@ -196,11 +176,9 @@ public:
 	// next iteration
 	bool nextIter(map< Index, double >::iterator& it, Dimension& r, Dimension& c, double& v)
 	{
-		it++;
-		if (it == mp.end())
+		if (++it == mp.end())
 			return false;
-		r = getMatrixRow(it->first);
-		c = getMatrixColumn(it->first);
+		getMatrixRC(it->first, r, c);
 		v = it->second;
 		return true;
 	}
@@ -215,16 +193,10 @@ public:
 	}
 
 	// returns the number of rows
-	Dimension GetRows() const
-	{
-		return rows;
-	}
+	inline Dimension GetRows() const { return rows; }
 
 	// returns the number of columns
-	Dimension GetCols() const
-	{
-		return cols;
-	}
+	inline Dimension GetCols() const { return cols; }
 
 	// output operator
 	friend ostream& operator<<(ostream& os, const Matrix& M)
@@ -236,22 +208,18 @@ public:
 					<< ((c == M.cols) ? ((r == M.rows) ? "]" : ";\n") : ",");
 		return os;
 	}
+
 	// Number of non-zero elements
-	Index Size()
-	{
-		return mp.size();
-	}
+	inline Index Size() { return mp.size(); }
+
 	// destructor
 	~Matrix()
 	{
 		mp.clear();
 	}
-
 };
 
-/**
-* returns a matrix with size cols x rows with ones as values
-*/
+// returns a matrix with size cols x rows with ones as values
 Matrix Ones(const Dimension rows, const Dimension cols)
 {
 	Matrix res = Matrix(rows, cols);
@@ -261,58 +229,36 @@ Matrix Ones(const Dimension rows, const Dimension cols)
 	return res;
 }
 
-/**
-* returns a matrix with size cols x rows with zeros as values
-*/
-Matrix Zeros(const Dimension rows, const Dimension cols)
-{
-	return Matrix(rows, cols);
-}
-
-
-/**
-* returns a diagonal matrix with size n x n with ones at the diagonal
-*/
-Matrix Diag(const Dimension n)
+// returns a diagonal matrix with size n x n with ones at the diagonal
+Matrix Diag(const Dimension n, const double v = 1.00)
 {
 	Matrix res = Matrix(n, n);
 	for (Dimension i = 1; i <= n; i++)
-		res.set(i, i, 1.00);
+		res.set(i, i, v);
 	return res;
 }
 
-/**
-* returns a diagonal matrix
-*/
-Matrix Diag(const Matrix& v)
+// returns a diagonal matrix
+Matrix Diag(Matrix& v)
 {
 	Matrix res;
-	if (v.GetCols() == 1)
+	if (v.GetCols() != 1 && v.GetRows() != 1)
+		throw Exception(MER_INVALID_DIMS);
+	res = (v.GetCols() == 1) ? Matrix(v.GetRows(), v.GetRows()) : Matrix(v.GetCols(), v.GetCols());
+	map< Index, double >::iterator it;
+	Dimension r = 0;
+	Dimension c = 0;
+	double t;
+	bool check = v.beginIter(it, r, c, t);
+	while (check)
 	{
-		// the given matrix is a vector n x 1
-		Dimension rows = v.GetRows();
-		res = Matrix(rows, rows);
-		// copy the values of the vector to the matrix
-		for (Dimension r = 1; r <= rows; r++)
-			res.set(r, r, v(r, 1));
+		res.set(r + c - 1, r + c - 1, t);
+		check = v.nextIter(it, r, c, t);
 	}
-	else if (v.GetRows() == 1)
-	{
-		// the given matrix is a vector 1 x n
-		Dimension cols = v.GetCols();
-		res = Matrix(cols, cols);
-		// copy the values of the vector to the matrix
-		for (Dimension c = 1; c <= cols; c++)
-			res.set(c, c, v(1, c));
-	}
-	else
-		throw Exception("Parameter for diag must be a vector");
 	return res;
 }
 
-/*
-* returns the inverse of Matrix a, stores determinent in lastDest
-*/
+// returns the inverse of Matrix a, stores determinent in lastDest
 Matrix Inv(const Matrix& a)
 {
 	Matrix res;
@@ -321,7 +267,7 @@ Matrix Inv(const Matrix& a)
 
 	if (rows != cols)
 	{
-		throw Exception("Matrix must be square");
+		throw Exception(MER_NOT_SQUARE);
 		return res;
 	}
 	// calculate inverse using gauss-jordan elimination
@@ -337,7 +283,7 @@ Matrix Inv(const Matrix& a)
 		if (r >rows)
 		{
 			lastDet = 0.0;
-			throw Exception("Determinant of matrix is zero");
+			throw Exception(MER_ZERO_DET);
 			return res;
 		}
 		if (r != c)
@@ -361,7 +307,6 @@ Matrix Inv(const Matrix& a)
 				if (ai(r, c) != 0.0)
 				{
 					double f = -ai(r, c) / ai(c, c);
-
 					// add (f * row c) to row r to eleminate the value at column c
 					for (Dimension s = c; s <= cols; s++)
 						ai.set(r, s, ai(r, s) + f *ai(c, s));
@@ -371,8 +316,7 @@ Matrix Inv(const Matrix& a)
 			}
 			else
 			{
-				// make value at (c, c) one,
-				// divide each value on row r with the value at ai(c,c)
+				// make value at (c, c) one, divide each value on row r with the value at ai(c,c)
 				double f = ai(c, c);
 				lastDet *= f;
 				for (Dimension s = c; s <= cols; s++)
@@ -385,9 +329,7 @@ Matrix Inv(const Matrix& a)
 	return res;
 }
 
-/*
-* returns the inverse of Matrix a, stores determinent in DT
-*/
+// Solve equation a*x=v, a is n*n matrix and x,v are n*eqn matrices, eqn: number of equation sets
 Matrix Solve(const Matrix& a, const Matrix& v)
 {
 	map< Index, double >::iterator it;
@@ -397,7 +339,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 
 	if (a.GetCols() != n || v.GetRows() != n)
 	{
-		throw Exception("Invalid dimensions");
+		throw Exception(MER_INVALID_DIMS);
 		return vi;
 	}
 
@@ -411,7 +353,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		for (r = c; r <= n && ai(r, c) == 0.0; r++) {}
 		if (r > n)
 		{
-			throw Exception("Determinant of matrix is zero");
+			throw Exception(MER_ZERO_DET);
 			return vi;
 		}
 		if (r != c)
@@ -468,12 +410,12 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 	return vi;
 }
 
-// addition of Matrix with Matrix
+// Addition of Matrix with Matrix
 Matrix Add(Matrix& a, Matrix& b)
 {
 	if (a.GetRows() != b.GetRows() || a.GetCols() != b.GetCols())
 	{
-		throw Exception("Dimensions does not match");
+		throw Exception(MER_INVALID_DIMS);
 		return Matrix();
 	}
 	map< Index, double >::iterator ita;
@@ -508,12 +450,12 @@ Matrix Add(Matrix& a, Matrix& b)
 	return res;
 }
 
-// subtraction of Matrix with Matrix
+// Subtraction of Matrix with Matrix
 Matrix Sub(Matrix& a, Matrix& b)
 {
 	if (a.GetRows() != b.GetRows() || a.GetCols() != b.GetCols())
 	{
-		throw Exception("Dimensions does not match");
+		throw Exception(MER_INVALID_DIMS);
 		return Matrix();
 	}
 	map< Index, double >::iterator ita;
@@ -548,7 +490,7 @@ Matrix Sub(Matrix& a, Matrix& b)
 	return res;
 }
 
-// multiplication of Matrix with Matrix
+// Multiplication of Matrix with Matrix
 Matrix Mul(Matrix& a, Matrix& b)
 {
 	Dimension ar = a.GetRows();
@@ -556,7 +498,7 @@ Matrix Mul(Matrix& a, Matrix& b)
 
 	if (a.GetCols() != b.GetRows())
 	{
-		throw Exception("Dimensions does not match");
+		throw Exception(MER_INVALID_DIMS);
 		return Matrix();
 	}
 	map< Index, double >::iterator it;
@@ -582,7 +524,7 @@ Matrix Mul(Matrix& a, Matrix& b)
 	return res;
 }
 
-// transpose of Matrix
+// Transpose of Matrix
 Matrix Trans(Matrix& a)
 {
 	map< Index, double >::iterator it;
@@ -599,7 +541,7 @@ Matrix Trans(Matrix& a)
 	return res;
 }
 
-// multiplication of Matrix with transpose of a Matrix
+// Multiplication of Matrix with Transpose of a Matrix
 Matrix MulTrans(Matrix& a, Matrix& b)
 {
 	Dimension ar = a.GetRows();
@@ -607,7 +549,7 @@ Matrix MulTrans(Matrix& a, Matrix& b)
 
 	if (a.GetCols() != b.GetCols())
 	{
-		throw Exception("Dimensions does not match");
+		throw Exception(MER_INVALID_DIMS);
 		return Matrix();
 	}
 	map< Index, double >::iterator it1;
@@ -649,39 +591,29 @@ int main(int argc, char *argv[])
 	// below some demonstration of the usage of the Matrix class
 	try
 	{
-		// create an empty matrix of 3x3 (will initially contain zeros)
+		// examples part 1
 		Dimension cols = 3;
 		Dimension rows = 3;
 		Matrix A = Matrix(cols, rows);
-
-		// fill in some values in matrix a
 		int count = 0;
 		for (Dimension r = 1; r <= rows; r++)
 			for (Dimension c = 1; c <= cols; c++)
 				A.set(r, c, ++count);
-
-		// adjust a value in the matrix (indexes are one-based)
 		A.set(2, 1, 2);
-
-		// print the whole matrix
 		cout << "A= \n" << A << "\n";
-
-		Matrix V = Matrix(rows, 1);    // a vector
+		Matrix V = Matrix(rows, 1);
 		V.set(1, 1, 10);
 		V.set(2, 1, 22);
 		V.set(3, 1, 46);
 		cout << "V= \n" << V << "\n";
-
 		cout << "Inv(A)*V= \n" << Mul(Inv(A),V) << "\n";
 		cout << "Solve(A, V)= \n" << Solve(A, V) << "\n";
-
 		cout << "\n\n\n";
 		
+		// examples part 2
 		Dimension nadd = 5;
 		Matrix A1 = Matrix(nadd, nadd);
 		Matrix A2 = Matrix(nadd, nadd);
-
-		// fill in some values in matrix a
 		count = 0;
 		for (Dimension r = 1; r <= nadd; r++)
 		{
@@ -690,13 +622,13 @@ int main(int argc, char *argv[])
 		}
 		cout << "A1= \n" << A1 << "\n";
 		cout << "A2= \n" << A2 << "\n";
-
 		Matrix A3 = Sub(A1, A2);
 		cout << "A1-A2= \n" << A3 << "\n";
 		cout << "\n\n\n";
 
-		Dimension test = 20;
-		Dimension band = 5;
+		// examples part 3
+		Dimension test = 100;
+		Dimension band = 10;
 		cout << "Creating a " << test << "*" << test
 			<< " Matrix with " << 2 * band + 1
 			<< " non-zero middle elements at each row"
@@ -719,23 +651,23 @@ int main(int argc, char *argv[])
 		cout << "\nInv(M)*N, Solve(M, N)= \n";
 		for (Dimension i = 1;i <= test;i++)
 			cout << "(" << X1(i, 1) << ", " << X2(i, 1) << ") " << (!(i % 5) ? "\n" : "");
-		cout << "\n\nInv(M)*N computation time:    " << (double)(t2 - t1) / CLOCKS_PER_SEC;
+		cout << "\n\nInv(M)*N computation time: " << (double)(t2 - t1) / CLOCKS_PER_SEC;
 		cout << "\nSolve(M, N) computation time: " << (double)(t3 - t2) / CLOCKS_PER_SEC;
 
+		// examples part 4
 		cout << "\n\n\ncomputing M*M and M*Trans(Trans(M)), please wait...";
 		t1 = clock();
 		X1 = Mul(M, M);
 		t2 = clock();
 		X2 = MulTrans(M, Trans(M));
 		t3 = clock();
-		cout << "\n\nM*M computation time:              " << (double)(t2 - t1) / CLOCKS_PER_SEC;
-		cout << "\nM*Trans(Trans(M) computation time: " << (double)(t3 - t2) / CLOCKS_PER_SEC;
-
-		cout << "\n";
+		cout << "\n\nM*M computation time: " << (double)(t2 - t1) / CLOCKS_PER_SEC;
+		cout << "\nM*Trans(Trans(M)) computation time: " << (double)(t3 - t2) / CLOCKS_PER_SEC;
+		cout << "\n\n";
 	}
 	catch (Exception err)
 	{
-		cout << "Error: \n" << err.msg << endl;
+		cout << "Error code " << err.code << endl;
 	}
 	catch (...)
 	{
