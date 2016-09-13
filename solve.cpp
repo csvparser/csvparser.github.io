@@ -54,11 +54,6 @@ Dimension getMatrixRow(Index i)
 // Declarations
 class Matrix;
 static double lastDet; // Determinant computed by Inv function
-Matrix Diag(const Dimension n);
-Matrix Diag(const Matrix& v);
-Matrix Inv(const Matrix& a);
-Matrix Ones(const Dimension rows, const Dimension cols);
-Matrix Zeros(const Dimension rows, const Dimension cols);
 
 /*
 * a simple exception class
@@ -171,183 +166,6 @@ public:
 		return *this;
 	}
 
-	// add a double value (elements wise)
-	Matrix& Add(const double v)
-	{
-		for (Dimension r = 1; r <= rows; r++)
-			for (Dimension c = 1; c <= cols; c++)
-				set(r, c, get(r, c) + v);
-		return *this;
-	}
-
-	// subtract a double value (elements wise)
-	Matrix& Subtract(const double v)
-	{
-		return Add(-v);
-	}
-
-	// multiply a double value (elements wise)
-	Matrix& Multiply(const double v)
-	{
-		for (Dimension r = 1; r <= rows; r++)
-			for (Dimension c = 1; c <= cols; c++)
-				set(r, c, get(r, c) * v);
-		return *this;
-	}
-
-	// divide a double value (elements wise)
-	Matrix& Divide(const double v)
-	{
-		return Multiply(1 / v);
-	}
-
-	// addition of Matrix with Matrix
-	friend Matrix operator+(const Matrix& a, const Matrix& b)
-	{
-		// check if the dimensions match
-		if (a.rows == b.rows && a.cols == b.cols)
-		{
-			Matrix res(a.rows, a.cols);
-			for (Dimension r = 1; r <= a.rows; r++)
-				for (Dimension c = 1; c <= a.cols; c++)
-					res.set(r, c, a(r, c) + b(r, c));
-			return res;
-		}
-		else
-			throw Exception("Dimensions does not match");
-		// return an empty matrix (this never happens but just for safety)
-		return Matrix();
-	}
-
-	// addition of Matrix with double
-	friend Matrix operator+ (const Matrix& a, const double b)
-	{
-		Matrix res = a;
-		res.Add(b);
-		return res;
-	}
-	// addition of double with Matrix
-	friend Matrix operator+ (const double b, const Matrix& a)
-	{
-		Matrix res = a;
-		res.Add(b);
-		return res;
-	}
-
-	// subtraction of Matrix with Matrix
-	friend Matrix operator- (const Matrix& a, const Matrix& b)
-	{
-		// check if the dimensions match
-		if (a.rows == b.rows && a.cols == b.cols)
-		{
-			Matrix res(a.rows, a.cols);
-			for (Dimension r = 1; r <= a.rows; r++)
-				for (Dimension c = 1; c <= a.cols; c++)
-					res.set(r, c, a(r, c) - b(r, c));
-			return res;
-		}
-		else
-			throw Exception("Dimensions does not match");
-		// return an empty matrix (this never happens but just for safety)
-		return Matrix();
-	}
-
-	// subtraction of Matrix with double
-	friend Matrix operator- (const Matrix& a, const double b)
-	{
-		Matrix res = a;
-		res.Subtract(b);
-		return res;
-	}
-	// subtraction of double with Matrix
-	friend Matrix operator- (const double b, const Matrix& a)
-	{
-		Matrix res = -a;
-		res.Add(b);
-		return res;
-	}
-
-	// operator unary minus
-	friend Matrix operator- (const Matrix& a)
-	{
-		Matrix res(a.rows, a.cols);
-		for (Dimension r = 1; r <= a.rows; r++)
-			for (Dimension c = 1; c <= a.cols; c++)
-				res.set(r, c, -a(r, c));
-		return res;
-	}
-
-	// operator multiplication
-	friend Matrix operator* (const Matrix& a, const Matrix& b)
-	{
-		// check if the dimensions match
-		if (a.cols == b.rows)
-		{
-			Matrix res(a.rows, b.cols);
-			for (Dimension r = 1; r <= a.rows; r++)
-				for (Dimension m = 1; m <= b.cols; m++)
-				{
-					double temp = 0.0;
-					for (Dimension c = 1; c <= b.rows; c++)
-						temp += a(r, c) * b(c, m);
-					res.set(r, m, temp);
-				}
-			return res;
-		}
-		else
-			throw Exception("Dimensions does not match");
-		// return an empty matrix (this never happens but just for safety)
-		return Matrix();
-	}
-
-	// multiplication of Matrix with double
-	friend Matrix operator* (const Matrix& a, const double b)
-	{
-		Matrix res = a;
-		res.Multiply(b);
-		return res;
-	}
-	// multiplication of double with Matrix
-	friend Matrix operator* (const double b, const Matrix& a)
-	{
-		Matrix res = a;
-		res.Multiply(b);
-		return res;
-	}
-
-	// division of Matrix with Matrix
-	friend Matrix operator/ (const Matrix& a, const Matrix& b)
-	{
-		// check if the dimensions match: must be square and equal sizes
-		if (a.rows == a.cols && a.rows == a.cols && b.rows == b.cols)
-		{
-			Matrix res(a.rows, a.cols);
-			res = a * Inv(b);
-			return res;
-		}
-		else
-			throw Exception("Dimensions does not match");
-		// return an empty matrix (this never happens but just for safety)
-		return Matrix();
-	}
-
-	// division of Matrix with double
-	friend Matrix operator/ (const Matrix& a, const double b)
-	{
-		Matrix res = a;
-		res.Divide(b);
-		return res;
-	}
-
-	// division of double with Matrix
-	friend Matrix operator/ (const double b, const Matrix& a)
-	{
-		Matrix b_matrix(1, 1);
-		b_matrix.set(1, 1, b);
-		Matrix res = b_matrix / a;
-		return res;
-	}
-
 	// returns the number of rows
 	Dimension GetRows() const
 	{
@@ -366,8 +184,8 @@ public:
 		for (Dimension r = 1; r <= M.rows; r++)
 			for (Dimension c = 1; c <= M.cols; c++)
 				os << ((c == 1) ? ((r == 1) ? "[" : " ") : "")
-				<< setw(8) << setprecision(4) << M(r, c)
-				<< ((c == M.cols) ? ((r == M.rows) ? "]" : ";\n") : ",");
+					<< setw(8) << setprecision(4) << M(r, c)
+					<< ((c == M.cols) ? ((r == M.rows) ? "]" : ";\n") : ",");
 		return os;
 	}
 	// Number of non-zero elements
@@ -406,8 +224,6 @@ Matrix Zeros(const Dimension rows, const Dimension cols)
 
 /**
 * returns a diagonal matrix with size n x n with ones at the diagonal
-* @param  v a vector
-* @return a diagonal matrix with ones on the diagonal
 */
 Matrix Diag(const Dimension n)
 {
@@ -419,8 +235,6 @@ Matrix Diag(const Dimension n)
 
 /**
 * returns a diagonal matrix
-* @param  v a vector
-* @return a diagonal matrix with the given vector v on the diagonal
 */
 Matrix Diag(const Matrix& v)
 {
@@ -449,9 +263,9 @@ Matrix Diag(const Matrix& v)
 }
 
 /*
-* returns the inverse of Matrix a, stores determinent in DT
+* returns the inverse of Matrix a, stores determinent in lastDest
 */
-Matrix Inv(const Matrix& a, double& DT)
+Matrix Inv(const Matrix& a)
 {
 	Matrix res;
 	Dimension rows = a.GetRows();
@@ -463,11 +277,9 @@ Matrix Inv(const Matrix& a, double& DT)
 		return res;
 	}
 	// calculate inverse using gauss-jordan elimination
-	//   http://mathworld.wolfram.com/MatrixInverse.html
-	//   http://math.uww.edu/~mcfarlat/inverse.htm
 	res = Diag(rows);   // a diagonal matrix with ones at the diagonal
 	Matrix ai = a;    // make a copy of Matrix a
-	DT = 1;
+	lastDet = 1.0;
 	for (Dimension c = 1; c <= cols; c++)
 	{
 		// element (c, c) should be non zero. if not, swap content
@@ -476,7 +288,7 @@ Matrix Inv(const Matrix& a, double& DT)
 		for (r = c; r <= rows && ai(r, c) == 0.0; r++) {}
 		if (r >rows)
 		{
-			DT = 0;
+			lastDet = 0.0;
 			throw Exception("Determinant of matrix is zero");
 			return res;
 		}
@@ -490,8 +302,6 @@ Matrix Inv(const Matrix& a, double& DT)
 				temp = res(c, s);
 				res.set(c, s, res(r, s));
 				res.set(r, s, temp);
-				//Swap(ai(c, s), ai(r, s));
-				//Swap(res(c, s), res(r, s));
 			}
 
 		// eliminate non-zero values on the other rows at column c
@@ -504,13 +314,11 @@ Matrix Inv(const Matrix& a, double& DT)
 				{
 					double f = -ai(r, c) / ai(c, c);
 
-					// add (f * row c) to row r to eleminate the value
-					// at column c
-					for (Dimension s = 1; s <= cols; s++)
-					{
+					// add (f * row c) to row r to eleminate the value at column c
+					for (Dimension s = c; s <= cols; s++)
 						ai.set(r, s, ai(r, s) + f *ai(c, s));
+					for (Dimension s = 1; s <= cols; s++)
 						res.set(r, s, res(r, s) + f *res(c, s));
-					}
 				}
 			}
 			else
@@ -518,23 +326,15 @@ Matrix Inv(const Matrix& a, double& DT)
 				// make value at (c, c) one,
 				// divide each value on row r with the value at ai(c,c)
 				double f = ai(c, c);
-				DT *= f;
-				for (Dimension s = 1; s <= cols; s++)
-				{
+				lastDet *= f;
+				for (Dimension s = c; s <= cols; s++)
 					ai.set(r, s, ai(r, s) / f);
+				for (Dimension s = 1; s <= cols; s++)
 					res.set(r, s, res(r, s) / f);
-				}
 			}
 		}
 	}
 	return res;
-}
-/*
-* returns the inverse of Matrix a, stores determinent in lastDet
-*/
-Matrix Inv(const Matrix& a)
-{
-	return Inv(a, lastDet);
 }
 
 /*
@@ -553,14 +353,12 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		return vi;
 	}
 
-	Matrix ai = a;    // make a copy of Matrix a
+	Matrix ai = a; 
 	vi = v;
-	Dimension eqn = v.GetCols(); // number of equation sets
+	Dimension eqn = v.GetCols();
 
 	for (Dimension c = 1; c <= n; c++)
 	{
-		// element (c, c) should be non zero. if not, swap content
-		// of lower rows
 		Dimension r;
 		for (r = c; r <= n && ai(r, c) == 0.0; r++) {}
 		if (r > n)
@@ -570,7 +368,6 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		}
 		if (r != c)
 		{
-			// swap rows
 			for (Dimension s = 1; s <= n; s++)
 			{
 				double temp = ai(c, s);
@@ -585,7 +382,6 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 			}
 		}
 
-		// eliminate non-zero values on below rows
 		double tc = ai(c, c);
 		for (Dimension r = c + 1; r <= n; r++)
 		{
@@ -593,17 +389,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 			if (t != 0.0)
 			{
 				double f = -t / tc;
-
-				// add (f * row c) to row r to eleminate the value
-				// at column c
 				ai.set(r, c, 0.0);
-				/*
-				Dimension first;
-				Dimension last;
-				ai.inRow(c, first, last);
-				for (Dimension s = c + 1; s <= last; s++)
-				ai.set(r, s, ai(r, s) + f *ai(c, s));
-				*/
 				Dimension s = c;
 				Dimension ci = c;
 				bool check = ai.beginIter(it, ci, s, t);
@@ -631,95 +417,183 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 			}
 			vi.set(r, eq, (vi(r, eq) - temp) / ai(r, r));
 		}
-	// cout << "\nSize ai:" << ai.Size() << "\n";
-	// cout << ai << "\n";
 	return vi;
 }
 
 // addition of Matrix with Matrix
-Matrix addMatrix(Matrix& a, Matrix& b)
+Matrix Add(Matrix& a, Matrix& b)
 {
+	if (a.GetRows() != b.GetRows() || a.GetCols() != b.GetCols())
+	{
+		throw Exception("Dimensions does not match");
+		return Matrix();
+	}
 	map< Index, double >::iterator ita;
 	map< Index, double >::iterator itb;
-	// check if the dimensions match
-	if (a.GetRows() == b.GetRows() && a.GetCols() == b.GetCols())
+	Matrix res(a.GetRows(), a.GetCols());
+	Dimension ra = 0;
+	Dimension ca = 0;
+	Dimension rb = 0;
+	Dimension cb = 0;
+	double ta, tb;
+	bool checka = a.beginIter(ita, ra, ca, ta);
+	bool checkb = b.beginIter(itb, rb, cb, tb);
+	while (checka || checkb)
 	{
-		Matrix res(a.GetRows(), a.GetCols());
-		Dimension ra = 0;
-		Dimension ca = 0;
-		Dimension rb = 0;
-		Dimension cb = 0;
-		double ta, tb;
-		bool checka = a.beginIter(ita, ra, ca, ta);
-		bool checkb = b.beginIter(itb, rb, cb, tb);
-		while (checka || checkb)
+		if (checka && checkb && ita->first == itb->first)
 		{
-			if (checka && checkb && ita->first == itb->first)
-			{
-				res.set(ra, ca, ta + tb);
-				checka = a.nextIter(ita, ra, ca, ta);
-				checkb = b.nextIter(itb, rb, cb, tb);
-			}
-			if (!checkb || ita->first < itb->first)
-			{
-				res.set(ra, ca, ta);
-				checka = a.nextIter(ita, ra, ca, ta);
-			}
-			if (!checka || itb->first < ita->first)
-			{
-				res.set(rb, cb, tb);
-				checkb = b.nextIter(itb, rb, cb, tb);
-			}
+			res.set(ra, ca, ta + tb);
+			checka = a.nextIter(ita, ra, ca, ta);
+			checkb = b.nextIter(itb, rb, cb, tb);
 		}
-		return res;
+		if (!checkb || ita->first < itb->first)
+		{
+			res.set(ra, ca, ta);
+			checka = a.nextIter(ita, ra, ca, ta);
+		}
+		if (!checka || itb->first < ita->first)
+		{
+			res.set(rb, cb, tb);
+			checkb = b.nextIter(itb, rb, cb, tb);
+		}
 	}
-	else
-		throw Exception("Dimensions does not match");
-	// return an empty matrix (this never happens but just for safety)
-	return Matrix();
+	return res;
 }
 
 // subtraction of Matrix with Matrix
-Matrix subMatrix(Matrix& a, Matrix& b)
+Matrix Sub(Matrix& a, Matrix& b)
 {
+	if (a.GetRows() != b.GetRows() || a.GetCols() != b.GetCols())
+	{
+		throw Exception("Dimensions does not match");
+		return Matrix();
+	}
 	map< Index, double >::iterator ita;
 	map< Index, double >::iterator itb;
-	// check if the dimensions match
-	if (a.GetRows() == b.GetRows() && a.GetCols() == b.GetCols())
+	Matrix res(a.GetRows(), a.GetCols());
+	Dimension ra = 0;
+	Dimension ca = 0;
+	Dimension rb = 0;
+	Dimension cb = 0;
+	double ta, tb;
+	bool checka = a.beginIter(ita, ra, ca, ta);
+	bool checkb = b.beginIter(itb, rb, cb, tb);
+	while (checka || checkb)
 	{
-		Matrix res(a.GetRows(), a.GetCols());
-		Dimension ra = 0;
-		Dimension ca = 0;
-		Dimension rb = 0;
-		Dimension cb = 0;
-		double ta, tb;
-		bool checka = a.beginIter(ita, ra, ca, ta);
-		bool checkb = b.beginIter(itb, rb, cb, tb);
-		while (checka || checkb)
+		if (checka && checkb && ita->first == itb->first)
 		{
-			if (checka && checkb && ita->first == itb->first)
-			{
-				res.set(ra, ca, ta - tb);
-				checka = a.nextIter(ita, ra, ca, ta);
-				checkb = b.nextIter(itb, rb, cb, tb);
-			}
-			if (!checkb || ita->first < itb->first)
-			{
-				res.set(ra, ca, ta);
-				checka = a.nextIter(ita, ra, ca, ta);
-			}
-			if (!checka || itb->first < ita->first)
-			{
-				res.set(rb, cb, -tb);
-				checkb = b.nextIter(itb, rb, cb, tb);
-			}
+			res.set(ra, ca, ta - tb);
+			checka = a.nextIter(ita, ra, ca, ta);
+			checkb = b.nextIter(itb, rb, cb, tb);
 		}
-		return res;
+		if (!checkb || ita->first < itb->first)
+		{
+			res.set(ra, ca, ta);
+			checka = a.nextIter(ita, ra, ca, ta);
+		}
+		if (!checka || itb->first < ita->first)
+		{
+			res.set(rb, cb, -tb);
+			checkb = b.nextIter(itb, rb, cb, tb);
+		}
 	}
-	else
+	return res;
+}
+
+// multiplication of Matrix with Matrix
+Matrix Mul(Matrix& a, Matrix& b)
+{
+	Dimension ar = a.GetRows();
+	Dimension bc = b.GetCols();
+
+	if (a.GetCols() != b.GetRows())
+	{
 		throw Exception("Dimensions does not match");
-	// return an empty matrix (this never happens but just for safety)
-	return Matrix();
+		return Matrix();
+	}
+	map< Index, double >::iterator it;
+
+	Matrix res(ar, bc);
+	for (Dimension r = 1; r <= ar; r++)
+	{
+		for (Dimension m = 1;m <= bc;m++)
+		{
+			Dimension c = 0;
+			Dimension ri = r;
+			double t;
+			double temp = 0.0;
+			bool check = a.beginIter(it, ri, c, t);
+			while (check && (ri == r))
+			{
+				temp += t*b(c, m);
+				check = a.nextIter(it, ri, c, t);
+			}
+			res.set(r, m, temp);
+		}
+	}
+	return res;
+}
+
+// transpose of Matrix
+Matrix Trans(Matrix& a)
+{
+	map< Index, double >::iterator it;
+	Matrix res(a.GetCols(), a.GetRows());
+	Dimension r = 0;
+	Dimension c = 0;
+	double t;
+	bool check = a.beginIter(it, r, c, t);
+	while (check)
+	{
+		res.set(c, r, t);
+		check = a.nextIter(it, r, c, t);
+	}
+	return res;
+}
+
+// multiplication of Matrix with transpose of a Matrix
+Matrix MulTrans(Matrix& a, Matrix& b)
+{
+	Dimension ar = a.GetRows();
+	Dimension br = b.GetRows();
+
+	if (a.GetCols() != b.GetCols())
+	{
+		throw Exception("Dimensions does not match");
+		return Matrix();
+	}
+	map< Index, double >::iterator it1;
+	map< Index, double >::iterator it2;
+
+	Matrix res(ar, br);
+	for (Dimension r = 1; r <= ar; r++)
+	{
+		for (Dimension m = 1;m <= br;m++)
+		{
+			Dimension c1 = 0;
+			Dimension c2 = 0;
+			Dimension ri = r;
+			Dimension mi = m;
+			double t1;
+			double t2;
+			double temp = 0.0;
+			bool checka = a.beginIter(it1, ri, c1, t1);
+			bool checkb = b.beginIter(it2, mi, c2, t2);
+			while (checka && checkb && (ri == r) && (mi == m))
+				if (c1 == c2)
+				{
+					temp += t1*t2;
+					checka = a.nextIter(it1, ri, c1, t1);
+					checkb = b.nextIter(it2, mi, c2, t2);
+				} 
+				else if (c1 < c2)
+					checka = a.nextIter(it1, ri, c1, t1);
+				else 
+					checkb = b.nextIter(it2, mi, c2, t2);
+			res.set(r, m, temp);
+		}
+	}
+	return res;
 }
 
 int main(int argc, char *argv[])
@@ -750,7 +624,7 @@ int main(int argc, char *argv[])
 		V.set(3, 1, 46);
 		cout << "V= \n" << V << "\n";
 
-		cout << "Inv(A)*V= \n" << Inv(A)*V << "\n";
+		cout << "Inv(A)*V= \n" << Mul(Inv(A),V) << "\n";
 		cout << "Solve(A, V)= \n" << Solve(A, V) << "\n";
 
 		cout << "\n\n\n";
@@ -769,17 +643,16 @@ int main(int argc, char *argv[])
 		cout << "A1= \n" << A1 << "\n";
 		cout << "A2= \n" << A2 << "\n";
 
-		Matrix A3 = A1 - A2;
-		Matrix A4 = subMatrix(A1, A2);
+		Matrix A3 = Sub(A1, A2);
 		cout << "A1-A2= \n" << A3 << "\n";
-		cout << "A1-A2= \n" << A4 << "\n";
 		cout << "\n\n\n";
 
-		Dimension test = 100;
-		Dimension band = 20;
+		Dimension test = 20;
+		Dimension band = 5;
 		cout << "Creating a " << test << "*" << test
 			<< " Matrix with " << 2 * band + 1
-			<< " non-zero middle elements at each row, please wait...";
+			<< " non-zero middle elements at each row"
+			<< "\nComputing Inverse and Solve, please wait...";
 		Matrix M = Matrix(test, test);
 		Matrix N = Matrix(test, 1);
 		for (Dimension i = 1;i <= test;i++)
@@ -790,18 +663,26 @@ int main(int argc, char *argv[])
 				M.set(i, j, 1.0 + rand() % 10);
 			N.set(i, 1, 1.0 + rand() % 10);
 		}
-		// cout << "\nM=\n" << M << "\n";
 		clock_t t1 = clock();
-		// Matrix X1 = N;
-		Matrix X1 = Inv(M)*N;
+		Matrix X1 = Mul(Inv(M), N);
 		clock_t t2 = clock();
 		Matrix X2 = Solve(M, N);
 		clock_t t3 = clock();
 		cout << "\nInv(M)*N, Solve(M, N)= \n";
 		for (Dimension i = 1;i <= test;i++)
-			cout << X1(i, 1) << " , " << X2(i, 1) << "\n";
-		cout << "\nInv(M)*N computation time:    " << (double)(t2 - t1) / CLOCKS_PER_SEC;
+			cout << "(" << X1(i, 1) << ", " << X2(i, 1) << ") " << (!(i % 5) ? "\n" : "");
+		cout << "\n\nInv(M)*N computation time:    " << (double)(t2 - t1) / CLOCKS_PER_SEC;
 		cout << "\nSolve(M, N) computation time: " << (double)(t3 - t2) / CLOCKS_PER_SEC;
+
+		cout << "\n\n\ncomputing M*M and M*Trans(Trans(M)), please wait...";
+		t1 = clock();
+		X1 = Mul(M, M);
+		t2 = clock();
+		X2 = MulTrans(M, Trans(M));
+		t3 = clock();
+		cout << "\n\nM*M computation time:              " << (double)(t2 - t1) / CLOCKS_PER_SEC;
+		cout << "\nM*Trans(Trans(M) computation time: " << (double)(t3 - t2) / CLOCKS_PER_SEC;
+
 		cout << "\n";
 	}
 	catch (Exception err)
