@@ -215,7 +215,6 @@ Matrix Diag(Matrix& v)
 // returns the inverse of Matrix a, stores determinent in lastDest
 Matrix Inv(const Matrix& a)
 {
-	map< Index, double >::iterator it;
 	Matrix res;
 	Dimension rows = a.GetRows();
 	Dimension cols = a.GetCols();
@@ -336,8 +335,8 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 				MatrixElem me;
 				for (ai.setIter(me, c, c);me.good && me.r == c;ai.incIter(me))
 					ai.set(r, me.c, ai(r, me.c) + f *me.v);
-				for (Dimension eq = 1; eq <= eqn; eq++)
-					vi.set(r, eq, vi(r, eq) + f *vi(c, eq));
+				for (vi.setIter(me, c, 0);me.good && me.r == c;vi.incIter(me))
+					vi.set(r, me.c, vi(r, me.c) + f *me.v);
 			}
 		}
 	}
@@ -571,6 +570,33 @@ int main(int argc, char *argv[])
 		t3 = clock();
 		cout << "\n\nM*M computation time: " << (double)(t2 - t1) / CLOCKS_PER_SEC;
 		cout << "\nM*Trans(Trans(M)) computation time: " << (double)(t3 - t2) / CLOCKS_PER_SEC;
+		cout << "\n\n";
+
+		// examples part 5
+		cout << "\n\n\ncomputing M*Inv(M) using Solve func, please wait...";
+		t1 = clock();
+		Matrix MMI = Mul(M, Solve(M, Diag(test)));
+		t2 = clock();
+		cout << "\n\nM*Inv M computation time: " << (double)(t2 - t1) / CLOCKS_PER_SEC;
+		double e1 = 1e300;
+		double d1 = e1;
+		double e2 = -e1;
+		double d2 = e2;
+		for (int i = 1; i <= test;i++)
+			for (int j = 1; j <= test;j++)
+				if (i == j)
+				{
+					if (d1 > MMI(i, j)) d1 = MMI(i, j);
+					if (d2 < MMI(i, j)) d2 = MMI(i, j);
+				}
+				else {
+					if (e1 > MMI(i, j)) e1 = MMI(i, j);
+					if (e2 < MMI(i, j)) e2 = MMI(i, j);
+				}
+		typedef numeric_limits< double > dbl;
+		cout << setprecision(dbl::max_digits10)
+			<< "\n\nDiagonal elements ranging from " << d1 << " to " << d2
+			<< "\nNon-diagonal elements ranging from " << e1 << " to " << e2;
 		cout << "\n\n";
 	}
 	catch (Exception err)
