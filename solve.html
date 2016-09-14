@@ -388,7 +388,8 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 					ai.set(r, s, ai(r, s) + f *t);
 					check = ai.nextIter(it, ci, s, t);
 				}
-				vi.set(r, 1, vi(r, 1) + f *vi(c, 1));
+				for (Dimension eq = 1; eq <= eqn; eq++)
+					vi.set(r, eq, vi(r, eq) + f *vi(c, eq));
 			}
 		}
 	}
