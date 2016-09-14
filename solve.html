@@ -95,7 +95,7 @@ inline void getMatrixRC(Index i, Dimension& r, Dimension& c)
 
 static double lastDet; // Determinant computed by Inv function
 
-// error codes
+					   // error codes
 #define MER_OUT_OF_RANGE 1
 #define MER_INVALID_DIMS 2
 #define MER_ZERO_DET 3
@@ -109,6 +109,15 @@ public:
 	Exception(const int arg) : code(arg) {	}
 };
 
+struct MatrixElem
+{
+public:
+	map< Index, double >::iterator it;
+	Dimension c;
+	Dimension r;
+	double v;
+	bool good;
+};
 
 class Matrix
 {
@@ -156,31 +165,31 @@ public:
 	{
 		if (r <= 0 || r > rows || c <= 0 || c > cols)
 			throw Exception(MER_OUT_OF_RANGE);
-		if (v == 0.0) 
-			mp.erase(getMatrixIndex(r, c)); 
-		else 
+		if (v == 0.0)
+			mp.erase(getMatrixIndex(r, c));
+		else
 			mp[getMatrixIndex(r, c)] = v;
 	}
 
 	// begin iteration, next element after [r, c]
-	bool beginIter(map< Index, double >::iterator& it, Dimension& r, Dimension& c, double& v)
+	void setIter(MatrixElem& me, const Dimension r, const Dimension c)
 	{
-		it = mp.upper_bound(getMatrixIndex(r, c));
-		if (it == mp.end())
-			return false;
-		getMatrixRC(it->first, r, c);
-		v = it->second;
-		return true;
+		me.it = mp.upper_bound(getMatrixIndex(r, c));
+		if (me.good = (me.it != mp.end()))
+		{
+			getMatrixRC(me.it->first, me.r, me.c);
+			me.v = me.it->second;
+		}
 	}
 
 	// next iteration
-	bool nextIter(map< Index, double >::iterator& it, Dimension& r, Dimension& c, double& v)
+	void incIter(MatrixElem& me)
 	{
-		if (++it == mp.end())
-			return false;
-		getMatrixRC(it->first, r, c);
-		v = it->second;
-		return true;
+		if (me.good = (++me.it != mp.end()))
+		{
+			getMatrixRC(me.it->first, me.r, me.c);
+			me.v = me.it->second;
+		}
 	}
 
 	// assignment operator
@@ -204,8 +213,8 @@ public:
 		for (Dimension r = 1; r <= M.rows; r++)
 			for (Dimension c = 1; c <= M.cols; c++)
 				os << ((c == 1) ? ((r == 1) ? "[" : " ") : "")
-					<< setw(8) << setprecision(4) << M(r, c)
-					<< ((c == M.cols) ? ((r == M.rows) ? "]" : ";\n") : ",");
+				<< setw(8) << setprecision(4) << M(r, c)
+				<< ((c == M.cols) ? ((r == M.rows) ? "]" : ";\n") : ",");
 		return os;
 	}
 
@@ -245,22 +254,16 @@ Matrix Diag(Matrix& v)
 	if (v.GetCols() != 1 && v.GetRows() != 1)
 		throw Exception(MER_INVALID_DIMS);
 	res = (v.GetCols() == 1) ? Matrix(v.GetRows(), v.GetRows()) : Matrix(v.GetCols(), v.GetCols());
-	map< Index, double >::iterator it;
-	Dimension r = 0;
-	Dimension c = 0;
-	double t;
-	bool check = v.beginIter(it, r, c, t);
-	while (check)
-	{
-		res.set(r + c - 1, r + c - 1, t);
-		check = v.nextIter(it, r, c, t);
-	}
+	MatrixElem me;
+	for (v.setIter(me, 0, 0);me.good;v.incIter(me))
+		res.set(me.r + me.c - 1, me.r + me.c - 1, me.v);
 	return res;
 }
 
 // returns the inverse of Matrix a, stores determinent in lastDest
 Matrix Inv(const Matrix& a)
 {
+	map< Index, double >::iterator it;
 	Matrix res;
 	Dimension rows = a.GetRows();
 	Dimension cols = a.GetCols();
@@ -332,8 +335,6 @@ Matrix Inv(const Matrix& a)
 // Solve equation a*x=v, a is n*n matrix and x,v are n*eqn matrices, eqn: number of equation sets
 Matrix Solve(const Matrix& a, const Matrix& v)
 {
-	map< Index, double >::iterator it;
-
 	Matrix vi;
 	Dimension n = a.GetRows();
 
@@ -343,7 +344,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		return vi;
 	}
 
-	Matrix ai = a; 
+	Matrix ai = a;
 	vi = v;
 	Dimension eqn = v.GetCols();
 
@@ -380,14 +381,9 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 			{
 				double f = -t / tc;
 				ai.set(r, c, 0.0);
-				Dimension s = c;
-				Dimension ci = c;
-				bool check = ai.beginIter(it, ci, s, t);
-				while (check && (ci == c))
-				{
-					ai.set(r, s, ai(r, s) + f *t);
-					check = ai.nextIter(it, ci, s, t);
-				}
+				MatrixElem me;
+				for (ai.setIter(me, c, c);me.good && me.r == c;ai.incIter(me))
+					ai.set(r, me.c, ai(r, me.c) + f *me.v);
 				for (Dimension eq = 1; eq <= eqn; eq++)
 					vi.set(r, eq, vi(r, eq) + f *vi(c, eq));
 			}
@@ -397,15 +393,9 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		for (Dimension eq = 1; eq <= eqn; eq++)
 		{
 			double temp = 0.0;
-			double t;
-			Dimension c = r;
-			Dimension ri = r;
-			bool check = ai.beginIter(it, ri, c, t);
-			while (check && (ri == r))
-			{
-				temp += t*vi(c, eq);
-				check = ai.nextIter(it, ri, c, t);
-			}
+			MatrixElem me;
+			for (ai.setIter(me, r, r);me.good && me.r == r;ai.incIter(me))
+				temp += me.v*vi(me.c, eq);
 			vi.set(r, eq, (vi(r, eq) - temp) / ai(r, r));
 		}
 	return vi;
@@ -419,33 +409,27 @@ Matrix Add(Matrix& a, Matrix& b)
 		throw Exception(MER_INVALID_DIMS);
 		return Matrix();
 	}
-	map< Index, double >::iterator ita;
-	map< Index, double >::iterator itb;
 	Matrix res(a.GetRows(), a.GetCols());
-	Dimension ra = 0;
-	Dimension ca = 0;
-	Dimension rb = 0;
-	Dimension cb = 0;
-	double ta, tb;
-	bool checka = a.beginIter(ita, ra, ca, ta);
-	bool checkb = b.beginIter(itb, rb, cb, tb);
-	while (checka || checkb)
+	MatrixElem me1, me2;
+	a.setIter(me1, 0, 0);
+	b.setIter(me2, 0, 0);
+	while (me1.good || me2.good)
 	{
-		if (checka && checkb && ita->first == itb->first)
+		if (me1.good && me2.good && (me1.it)->first == (me2.it)->first)
 		{
-			res.set(ra, ca, ta + tb);
-			checka = a.nextIter(ita, ra, ca, ta);
-			checkb = b.nextIter(itb, rb, cb, tb);
+			res.set(me1.r, me1.c, me1.v + me2.v);
+			a.incIter(me1);
+			b.incIter(me2);
 		}
-		if (!checkb || ita->first < itb->first)
+		if (!me2.good || (me1.it)->first < (me2.it)->first)
 		{
-			res.set(ra, ca, ta);
-			checka = a.nextIter(ita, ra, ca, ta);
+			res.set(me1.r, me1.c, me1.v);
+			a.incIter(me1);
 		}
-		if (!checka || itb->first < ita->first)
+		if (!me1.good || (me1.it)->first > (me2.it)->first)
 		{
-			res.set(rb, cb, tb);
-			checkb = b.nextIter(itb, rb, cb, tb);
+			res.set(me2.r, me2.c, me2.v);
+			b.incIter(me2);
 		}
 	}
 	return res;
@@ -459,33 +443,27 @@ Matrix Sub(Matrix& a, Matrix& b)
 		throw Exception(MER_INVALID_DIMS);
 		return Matrix();
 	}
-	map< Index, double >::iterator ita;
-	map< Index, double >::iterator itb;
 	Matrix res(a.GetRows(), a.GetCols());
-	Dimension ra = 0;
-	Dimension ca = 0;
-	Dimension rb = 0;
-	Dimension cb = 0;
-	double ta, tb;
-	bool checka = a.beginIter(ita, ra, ca, ta);
-	bool checkb = b.beginIter(itb, rb, cb, tb);
-	while (checka || checkb)
+	MatrixElem me1, me2;
+	a.setIter(me1, 0, 0);
+	b.setIter(me2, 0, 0);
+	while (me1.good || me2.good)
 	{
-		if (checka && checkb && ita->first == itb->first)
+		if (me1.good && me2.good && (me1.it)->first == (me2.it)->first)
 		{
-			res.set(ra, ca, ta - tb);
-			checka = a.nextIter(ita, ra, ca, ta);
-			checkb = b.nextIter(itb, rb, cb, tb);
+			res.set(me1.r, me1.c, me1.v - me2.v);
+			a.incIter(me1);
+			b.incIter(me2);
 		}
-		if (!checkb || ita->first < itb->first)
+		if (!me2.good || (me1.it)->first < (me2.it)->first)
 		{
-			res.set(ra, ca, ta);
-			checka = a.nextIter(ita, ra, ca, ta);
+			res.set(me1.r, me1.c, me1.v);
+			a.incIter(me1);
 		}
-		if (!checka || itb->first < ita->first)
+		if (!me1.good || (me1.it)->first >(me2.it)->first)
 		{
-			res.set(rb, cb, -tb);
-			checkb = b.nextIter(itb, rb, cb, tb);
+			res.set(me2.r, me2.c, -me2.v);
+			b.incIter(me2);
 		}
 	}
 	return res;
@@ -502,43 +480,27 @@ Matrix Mul(Matrix& a, Matrix& b)
 		throw Exception(MER_INVALID_DIMS);
 		return Matrix();
 	}
-	map< Index, double >::iterator it;
 
 	Matrix res(ar, bc);
 	for (Dimension r = 1; r <= ar; r++)
-	{
 		for (Dimension m = 1;m <= bc;m++)
 		{
-			Dimension c = 0;
-			Dimension ri = r;
-			double t;
+			MatrixElem me;
 			double temp = 0.0;
-			bool check = a.beginIter(it, ri, c, t);
-			while (check && (ri == r))
-			{
-				temp += t*b(c, m);
-				check = a.nextIter(it, ri, c, t);
-			}
+			for (a.setIter(me, r, 0);me.good && me.r == r;a.incIter(me))
+				temp += me.v*b(me.c, m);
 			res.set(r, m, temp);
 		}
-	}
 	return res;
 }
 
 // Transpose of Matrix
 Matrix Trans(Matrix& a)
 {
-	map< Index, double >::iterator it;
 	Matrix res(a.GetCols(), a.GetRows());
-	Dimension r = 0;
-	Dimension c = 0;
-	double t;
-	bool check = a.beginIter(it, r, c, t);
-	while (check)
-	{
-		res.set(c, r, t);
-		check = a.nextIter(it, r, c, t);
-	}
+	MatrixElem me;
+	for (a.setIter(me, 0, 0);me.good;a.incIter(me))
+		res.set(me.c, me.r, me.v);
 	return res;
 }
 
@@ -553,35 +515,28 @@ Matrix MulTrans(Matrix& a, Matrix& b)
 		throw Exception(MER_INVALID_DIMS);
 		return Matrix();
 	}
-	map< Index, double >::iterator it1;
-	map< Index, double >::iterator it2;
 
 	Matrix res(ar, br);
 	for (Dimension r = 1; r <= ar; r++)
 	{
 		for (Dimension m = 1;m <= br;m++)
 		{
-			Dimension c1 = 0;
-			Dimension c2 = 0;
-			Dimension ri = r;
-			Dimension mi = m;
-			double t1;
-			double t2;
 			double temp = 0.0;
-			bool checka = a.beginIter(it1, ri, c1, t1);
-			bool checkb = b.beginIter(it2, mi, c2, t2);
-			while (checka && checkb && (ri == r) && (mi == m))
-				if (c1 == c2)
+			MatrixElem me1, me2;
+			a.setIter(me1, r, 0);
+			b.setIter(me2, m, 0);
+			while (me1.good && me2.good && (me1.r == r) && (me2.r == m))
+				if (me1.c == me2.c)
 				{
-					temp += t1*t2;
-					checka = a.nextIter(it1, ri, c1, t1);
-					checkb = b.nextIter(it2, mi, c2, t2);
-				} 
-				else if (c1 < c2)
-					checka = a.nextIter(it1, ri, c1, t1);
-				else 
-					checkb = b.nextIter(it2, mi, c2, t2);
-			res.set(r, m, temp);
+					temp += me1.v*me2.v;
+					a.incIter(me1);
+					b.incIter(me2);
+				}
+				else if(me1.c < me2.c)
+					a.incIter(me1);
+				else
+					b.incIter(me2);
+				res.set(r, m, temp);
 		}
 	}
 	return res;
@@ -607,10 +562,10 @@ int main(int argc, char *argv[])
 		V.set(2, 1, 22);
 		V.set(3, 1, 46);
 		cout << "V= \n" << V << "\n";
-		cout << "Inv(A)*V= \n" << Mul(Inv(A),V) << "\n";
+		cout << "Inv(A)*V= \n" << Mul(Inv(A), V) << "\n";
 		cout << "Solve(A, V)= \n" << Solve(A, V) << "\n";
 		cout << "\n\n\n";
-		
+
 		// examples part 2
 		Dimension nadd = 5;
 		Matrix A1 = Matrix(nadd, nadd);
@@ -628,8 +583,8 @@ int main(int argc, char *argv[])
 		cout << "\n\n\n";
 
 		// examples part 3
-		Dimension test = 100;
-		Dimension band = 10;
+		Dimension test = 50;
+		Dimension band = 5;
 		cout << "Creating a " << test << "*" << test
 			<< " Matrix with " << 2 * band + 1
 			<< " non-zero middle elements at each row"
