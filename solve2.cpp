@@ -12,6 +12,7 @@ Last modified: Sep. 2016.
 #include < cstdio >
 #include < math.h >
 #include < map >
+#include < set >
 #include < vector >
 
 #include < iostream >
@@ -67,7 +68,16 @@ struct MatrixElem
 {
 public:
 	map< Index, Real >::iterator it;
-	map< Index, bool >::iterator ittr;
+	Dimension c;
+	Dimension r;
+	Real v;
+	bool good;
+};
+
+struct MatrixElemTr
+{
+public:
+	set< Index >::iterator it;
 	Dimension c;
 	Dimension r;
 	Real v;
@@ -80,7 +90,7 @@ private:
 	Dimension rows;
 	Dimension cols;
 	map< Index, Real > mp;
-	map< Index, bool > mptr;
+	set< Index > mptr;
 
 public:
 	// constructor
@@ -130,7 +140,7 @@ public:
 		else
 		{
 			mp[getMatrixIndex(r, c)] = v;
-			mptr[getMatrixIndex(c, r)] = true;
+			mptr.insert(getMatrixIndex(c, r));
 		}
 	}
 
@@ -156,22 +166,22 @@ public:
 	}
 
 	// begin iteration, next element after [r, c]
-	void setIterTr(MatrixElem& me, const Dimension r, const Dimension c)
+	void setIterTr(MatrixElemTr& me, const Dimension r, const Dimension c)
 	{
-		me.ittr = mptr.upper_bound(getMatrixIndex(c, r));
-		if (me.good = (me.ittr != mptr.end()))
+		me.it = mptr.upper_bound(getMatrixIndex(c, r));
+		if (me.good = (me.it != mptr.end()))
 		{
-			getMatrixRC(me.ittr->first, me.c, me.r);
+			getMatrixRC(*me.it, me.c, me.r);
 			me.v = mp[getMatrixIndex(me.r, me.c)];
 		}
 	}
 
 	// next iteration
-	void incIterTr(MatrixElem& me)
+	void incIterTr(MatrixElemTr& me)
 	{
-		if (me.good = (++me.ittr != mptr.end()))
+		if (me.good = (++me.it != mptr.end()))
 		{
-			getMatrixRC(me.ittr->first, me.c, me.r);
+			getMatrixRC(*me.it, me.c, me.r);
 			me.v = mp[getMatrixIndex(me.r, me.c)];
 		}
 	}
@@ -359,7 +369,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		}
 
 		Real tc = ai(c, c);
-		MatrixElem metr;
+		MatrixElemTr metr;
 		vector< Dimension > rn;
 
 		for (ai.setIterTr(metr, c, c);metr.good && metr.c == c;ai.incIterTr(metr))
@@ -469,7 +479,7 @@ Matrix Mul(Matrix& a, Matrix& b)
 	}
 
 	MatrixElem me;
-	MatrixElem metr;
+	MatrixElemTr metr;
 	Matrix res(ar, bc);
 	for (Dimension r = 1; r <= ar; r++)
 		for (Dimension m = 1;m <= bc;m++)
