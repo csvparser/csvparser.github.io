@@ -64,7 +64,6 @@ public:
 
 struct MatrixElem
 {
-public:
 	map< Index, Real >::iterator it;
 	Dimension c;
 	Dimension r;
@@ -74,7 +73,6 @@ public:
 
 struct MatrixElemTr
 {
-public:
 	set< Index >::iterator it;
 	Dimension c;
 	Dimension r;
@@ -163,7 +161,7 @@ public:
 		}
 	}
 
-	// begin iteration, next element after [r, c]
+	// begin iteration, next element after [r, c], look in columns
 	void setIterTr(MatrixElemTr& me, const Dimension r, const Dimension c)
 	{
 		me.it = mptr.upper_bound(getMatrixIndex(c, r));
@@ -174,7 +172,7 @@ public:
 		}
 	}
 
-	// next iteration
+	// next iteration, look in columns
 	void incIterTr(MatrixElemTr& me)
 	{
 		if (me.good = (++me.it != mptr.end()))
@@ -206,7 +204,7 @@ public:
 		for (Dimension r = 1; r <= M.rows; r++)
 			for (Dimension c = 1; c <= M.cols; c++)
 				os << ((c == 1) ? ((r == 1) ? "[" : " ") : "")
-				<< setw(8) << setprecision(4) << M(r, c)
+				<< setw(6) << M(r, c)
 				<< ((c == M.cols) ? ((r == M.rows) ? "]" : ";\n") : ",");
 		return os;
 	}
@@ -481,37 +479,31 @@ int main(int argc, char *argv[])
 
 		// examples part 3
 		Dimension test = 50;
-		Dimension band = 5;
-		cout << "Creating a " << test << "*" << test
-			<< " Matrix with " << 2 * band + 1
-			<< " non-zero middle elements at each row"
-			<< "\nSolve, please wait...";
+		cout << "Creating a " << test << "*" << test << " Matrix, Solve, please wait...";
 		Matrix M = Matrix(test, test);
 		Matrix N = Matrix(test, 1);
 		for (Dimension i = 1;i <= test;i++)
 		{
-			Dimension a = (i <= band) ? 1 : i - band;
-			Dimension b = (i > test - band) ? test : i + band;
-			for (Dimension j = a;j <= b;j++)
-				M.set(i, j, 1.0 + rand() % 10);
-			N.set(i, 1, 1.0 + rand() % 10);
+			for (Dimension j = 1;j <= test;j++)
+				M.set(i, j, rand() % 10);
+			N.set(i, 1, rand() % 10);
 		}
 		clock_t t1 = clock();
 		Matrix X = Solve(M, N);
 		clock_t t2 = clock();
-		cout << "\nInv(M)*N, Solve(M, N)= \n";
+		cout << "\nSolve(M, N)= \n";
 		cout << Trans(X);
 		cout << "\n\nSolve(M, N) computation time: " << (Real)(t2 - t1) / CLOCKS_PER_SEC;
 
 		// examples part 4
-		cout << "\n\n\ncomputing M*M, please wait...";
+		cout << "\n\nComputing M*M, please wait...";
 		t1 = clock();
 		X = Mul(M, M);
 		t2 = clock();
 		cout << "\n\nM*M computation time: " << (Real)(t2 - t1) / CLOCKS_PER_SEC;
 
 		// examples part 5
-		cout << "\n\n\ncomputing M*Inv(M) using Solve func, please wait...";
+		cout << "\n\nComputing M*Inv(M) using Solve func, please wait...";
 		t1 = clock();
 		Matrix MMI = Mul(M, Solve(M, Diag(test)));
 		t2 = clock();
@@ -520,8 +512,8 @@ int main(int argc, char *argv[])
 		Real d1 = e1;
 		Real e2 = -e1;
 		Real d2 = e2;
-		for (int i = 1; i <= test;i++)
-			for (int j = 1; j <= test;j++)
+		for (Dimension i = 1; i <= test;i++)
+			for (Dimension j = 1; j <= test;j++)
 				if (i == j)
 				{
 					if (d1 > MMI(i, j)) d1 = MMI(i, j);
@@ -538,11 +530,9 @@ int main(int argc, char *argv[])
 
 		// examples part 6
 		test = 1000;
-		band = 10;
-		cout << "\n\nCreating a " << test << "*" << test
-			<< " Matrix with " << 2 * band + 1
-			<< " non-zero middle elements at each row"
-			<< "\nSolve, please wait...";
+		Dimension band = 10;
+		cout << "\n\nCreating a " << test << "*" << test << " Matrix with " << 2 * band + 1
+			<< " non-zero middle elements at each row\nSolve, please wait...";
 		M = Matrix(test, test);
 		N = Matrix(test, 1);
 		for (Dimension i = 1;i <= test;i++)
@@ -559,7 +549,7 @@ int main(int argc, char *argv[])
 		cout << "\n\nSolve(M, N) computation time: "
 			<< setprecision(6) << (Real)(t2 - t1) / CLOCKS_PER_SEC;
 
-				cout << "\n\n";
+		cout << "\n\n";
 	}
 	catch (Exception err)
 	{
