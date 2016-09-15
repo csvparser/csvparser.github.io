@@ -96,15 +96,13 @@ inline void getMatrixRC(Index i, Dimension& r, Dimension& c)
 	c = m.at.c;
 }
 
-static Real lastDet; // Determinant computed by Inv function
-
-					 // error codes
+// error codes
 #define MER_OUT_OF_RANGE 1
 #define MER_INVALID_DIMS 2
 #define MER_ZERO_DET 3
 #define MER_NOT_SQUARE 4
 
-					 // a simple exception class
+// a simple exception class
 class Exception
 {
 public:
@@ -304,77 +302,6 @@ Matrix Diag(Matrix& v)
 	return res;
 }
 
-// returns the inverse of Matrix a, stores determinent in lastDest
-Matrix Inv(const Matrix& a)
-{
-	Matrix res;
-	Dimension rows = a.GetRows();
-	Dimension cols = a.GetCols();
-
-	if (rows != cols)
-	{
-		throw Exception(MER_NOT_SQUARE);
-		return res;
-	}
-	// calculate inverse using gauss-jordan elimination
-	res = Diag(rows);   // a diagonal matrix with ones at the diagonal
-	Matrix ai = a;    // make a copy of Matrix a
-	lastDet = 1.0;
-	for (Dimension c = 1; c <= cols; c++)
-	{
-		// element (c, c) should be non zero. if not, swap content
-		// of lower rows
-		Dimension r;
-		for (r = c; r <= rows && ai(r, c) == 0.0; r++) {}
-		if (r >rows)
-		{
-			lastDet = 0.0;
-			throw Exception(MER_ZERO_DET);
-			return res;
-		}
-		if (r != c)
-			// swap rows
-			for (Dimension s = 1; s <= cols; s++)
-			{
-				Real temp = ai(c, s);
-				ai.set(c, s, ai(r, s));
-				ai.set(r, s, temp);
-				temp = res(c, s);
-				res.set(c, s, res(r, s));
-				res.set(r, s, temp);
-			}
-
-		// eliminate non-zero values on the other rows at column c
-		for (Dimension r = 1; r <= rows; r++)
-		{
-			if (r != c)
-			{
-				// eleminate value at column c and row r
-				if (ai(r, c) != 0.0)
-				{
-					Real f = -ai(r, c) / ai(c, c);
-					// add (f * row c) to row r to eleminate the value at column c
-					for (Dimension s = c; s <= cols; s++)
-						ai.set(r, s, ai(r, s) + f *ai(c, s));
-					for (Dimension s = 1; s <= cols; s++)
-						res.set(r, s, res(r, s) + f *res(c, s));
-				}
-			}
-			else
-			{
-				// make value at (c, c) one, divide each value on row r with the value at ai(c,c)
-				Real f = ai(c, c);
-				lastDet *= f;
-				for (Dimension s = c; s <= cols; s++)
-					ai.set(r, s, ai(r, s) / f);
-				for (Dimension s = 1; s <= cols; s++)
-					res.set(r, s, res(r, s) / f);
-			}
-		}
-	}
-	return res;
-}
-
 // Solve equation a*x=v, a is n*n matrix and x,v are n*eqn matrices, eqn: number of equation sets
 Matrix Solve(const Matrix& a, const Matrix& v)
 {
@@ -393,13 +320,14 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 
 	for (Dimension c = 1; c <= n; c++)
 	{
-		Dimension r;
-		for (r = c; r <= n && ai(r, c) == 0.0; r++) {}
-		if (r > n)
+		MatrixElemTr metr;
+		ai.setIterTr(metr, c - 1, c);
+		if (!metr.good || metr.c != c)
 		{
 			throw Exception(MER_ZERO_DET);
 			return vi;
 		}
+		Dimension r = metr.r;
 		if (r != c)
 		{
 			for (Dimension s = 1; s <= n; s++)
@@ -417,7 +345,6 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		}
 
 		Real tc = ai(c, c);
-		MatrixElemTr metr;
 		vector< Dimension > rn;
 
 		for (ai.setIterTr(metr, c, c);metr.good && metr.c == c;ai.incIterTr(metr))
@@ -581,7 +508,6 @@ int main(int argc, char *argv[])
 		V.set(2, 1, 22);
 		V.set(3, 1, 46);
 		cout << "V= \n" << V << "\n";
-		cout << "Inv(A)*V= \n" << Mul(Inv(A), V) << "\n";
 		cout << "Solve(A, V)= \n" << Solve(A, V) << "\n";
 		cout << "\n\n\n";
 
@@ -607,7 +533,7 @@ int main(int argc, char *argv[])
 		cout << "Creating a " << test << "*" << test
 			<< " Matrix with " << 2 * band + 1
 			<< " non-zero middle elements at each row"
-			<< "\nComputing Inverse and Solve, please wait...";
+			<< "\nSolve, please wait...";
 		Matrix M = Matrix(test, test);
 		Matrix N = Matrix(test, 1);
 		for (Dimension i = 1;i <= test;i++)
@@ -619,20 +545,16 @@ int main(int argc, char *argv[])
 			N.set(i, 1, 1.0 + rand() % 10);
 		}
 		clock_t t1 = clock();
-		Matrix X1 = Mul(Inv(M), N);
+		Matrix X = Solve(M, N);
 		clock_t t2 = clock();
-		Matrix X2 = Solve(M, N);
-		clock_t t3 = clock();
 		cout << "\nInv(M)*N, Solve(M, N)= \n";
-		for (Dimension i = 1;i <= test;i++)
-			cout << "(" << X1(i, 1) << ", " << X2(i, 1) << ") " << (!(i % 5) ? "\n" : "");
-		cout << "\n\nInv(M)*N computation time: " << (Real)(t2 - t1) / CLOCKS_PER_SEC;
-		cout << "\nSolve(M, N) computation time: " << (Real)(t3 - t2) / CLOCKS_PER_SEC;
+		cout << Trans(X);
+		cout << "\n\nSolve(M, N) computation time: " << (Real)(t2 - t1) / CLOCKS_PER_SEC;
 
 		// examples part 4
-		cout << "\n\n\ncomputing M*M and M*Trans(Trans(M)), please wait...";
+		cout << "\n\n\ncomputing M*M, please wait...";
 		t1 = clock();
-		X1 = Mul(M, M);
+		X = Mul(M, M);
 		t2 = clock();
 		cout << "\n\nM*M computation time: " << (Real)(t2 - t1) / CLOCKS_PER_SEC;
 
@@ -664,7 +586,7 @@ int main(int argc, char *argv[])
 
 		// examples part 6
 		test = 1000;
-		band = 5;
+		band = 10;
 		cout << "\n\nCreating a " << test << "*" << test
 			<< " Matrix with " << 2 * band + 1
 			<< " non-zero middle elements at each row"
@@ -680,7 +602,7 @@ int main(int argc, char *argv[])
 			N.set(i, 1, 1.0 + rand() % 10);
 		}
 		t1 = clock();
-		X1 = Solve(M, N);
+		X = Solve(M, N);
 		t2 = clock();
 		cout << "\n\nSolve(M, N) computation time: "
 			<< setprecision(6) << (Real)(t2 - t1) / CLOCKS_PER_SEC;
