@@ -370,6 +370,8 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 	{
 		MatrixElemTr metr;
 		ai.setIterTr(metr, c - 1, c);
+		while (metr.v == 0.0 && metr.good && metr.c == c)
+			ai.incIterTr(metr);
 		if (!metr.good || metr.c != c)
 		{
 			throw Exception(MER_ZERO_DET);
