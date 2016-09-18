@@ -330,21 +330,19 @@ void SwapRows(Matrix& m, const Dimension r1, const Dimension r2)
 		{
 			m.set(r1, me1.c, me2.v);
 			m.set(r2, me2.c, me1.v);
-			m.setIter(me1, r1, me1.c);
-			m.setIter(me2, r2, me2.c);
+			m.incIter(me1);
+			m.incIter(me2);
 		}
 		else if (me1.good && me1.r == r1 && (!me2.good || me2.r != r2 || me1.c < me2.c))
 		{
 			m.erase(r1, me1.c);
 			m.set(r2, me1.c, me1.v);
-			m.setIter(me2, r2, me1.c);
 			m.setIter(me1, r1, me1.c);
 		}
 		else if (me2.good && me2.r == r2 && (!me1.good || me1.r != r1 || me2.c < me1.c))
 		{
 			m.set(r1, me2.c, me2.v);
 			m.erase(r2, me2.c);
-			m.setIter(me1, r1, me2.c);
 			m.setIter(me2, r2, me2.c);
 		}
 	}
