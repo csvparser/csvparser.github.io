@@ -300,6 +300,39 @@ Matrix Diag(Matrix& v)
 	return res;
 }
 
+// swap rows
+void SwapRows(Matrix& m, const Dimension r1, const Dimension r2)
+{
+	MatrixElem me1;
+	MatrixElem me2;
+	m.setIter(me1, r1, 0);
+	m.setIter(me2, r2, 0);
+	while ((me1.good && me1.r == r1) || (me2.good && me2.r == r2))
+	{
+		if (me1.good && me2.good && me1.c == me2.c)
+		{
+			m.set(r1, me1.c, me2.v);
+			m.set(r2, me2.c, me1.v);
+			m.setIter(me1, r1, me1.c);
+			m.setIter(me2, r2, me2.c);
+		}
+		else if (me1.good && me1.r == r1 && (!me2.good || me2.r != r2 || me1.c < me2.c))
+		{
+			m.set(r1, me1.c, 0.0);
+			m.set(r2, me1.c, me1.v);
+			m.setIter(me2, r2, me1.c);
+			m.setIter(me1, r1, me1.c);
+		}
+		else if (me2.good && me2.r == r2 && (!me1.good || me1.r != r1 || me2.c < me1.c))
+		{
+			m.set(r1, me2.c, me2.v);
+			m.set(r2, me2.c, 0.0);
+			m.setIter(me1, r1, me2.c);
+			m.setIter(me2, r2, me2.c);
+		}
+	}
+}
+
 // Solve equation a*x=v, a is n*n matrix and x,v are n*eqn matrices, eqn: number of equation sets
 Matrix Solve(const Matrix& a, const Matrix& v)
 {
@@ -328,18 +361,8 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		Dimension r = metr.r;
 		if (r != c)
 		{
-			for (Dimension s = 1; s <= n; s++)
-			{
-				Real temp = ai(c, s);
-				ai.set(c, s, ai(r, s));
-				ai.set(r, s, temp);
-			}
-			for (Dimension eq = 1; eq <= eqn; eq++)
-			{
-				Real temp = vi(c, eq);
-				vi.set(c, eq, vi(r, eq));
-				vi.set(r, eq, temp);
-			}
+			SwapRows(ai, r, c);
+			SwapRows(vi, r, c);
 		}
 
 		Real tc = ai(c, c);
@@ -523,6 +546,9 @@ int main(int argc, char *argv[])
 		cout << "A2= \n" << A2 << "\n";
 		Matrix A3 = Sub(A1, A2);
 		cout << "A1-A2= \n" << A3 << "\n";
+		SwapRows(A3, 1, 2);
+		SwapRows(A3, 4, 3);
+		cout << "Swapped Rows:\n" << A3 << "\n";
 		cout << "\n\n\n";
 
 		// examples part 3
