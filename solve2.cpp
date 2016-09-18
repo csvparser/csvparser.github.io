@@ -138,6 +138,17 @@ public:
 		mptr.insert(getMatrixIndex(c, r));
 	}
 
+	// inc matrix element
+	void inc(const Dimension r, const Dimension c, const Real v)
+	{
+		if (r <= 0 || r > rows || c <= 0 || c > cols)
+			throw Exception(MER_OUT_OF_RANGE);
+		if (v == 0.0)
+			return;
+		mp[getMatrixIndex(r, c)] += v;
+		mptr.insert(getMatrixIndex(c, r));
+	}
+
 	void erase(const Dimension r, const Dimension c)
 	{
 		if (r <= 0 || r > rows || c <= 0 || c > cols)
@@ -335,9 +346,9 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 			ai.erase(r, c);
 			MatrixElem me;
 			for (ai.setIter(me, c, c);me.good && me.r == c;ai.incIter(me))
-				ai.set(r, me.c, ai(r, me.c) + f *me.v);
+				ai.inc(r, me.c, f *me.v);
 			for (vi.setIter(me, c, 0);me.good && me.r == c;vi.incIter(me))
-				vi.set(r, me.c, vi(r, me.c) + f *me.v);
+				vi.inc(r, me.c, f *me.v);
 		}
 	}
 	for (Dimension r = n;r >= 1;r--)
