@@ -178,14 +178,20 @@ public:
 			throw Exception(MER_OUT_OF_RANGE);
 		if (v == 0.0)
 		{
-			mp.erase(getMatrixIndex(r, c));
-			mptr.erase(getMatrixIndex(c, r));
+			auto it = mp.find(getMatrixIndex(r, c));
+			if (it == mp.end())
+				return;
 		}
-		else
-		{
-			mp[getMatrixIndex(r, c)] = v;
-			mptr.insert(getMatrixIndex(c, r));
-		}
+		mp[getMatrixIndex(r, c)] = v;
+		mptr.insert(getMatrixIndex(c, r));
+	}
+
+	void erase(const Dimension r, const Dimension c)
+	{
+		if (r <= 0 || r > rows || c <= 0 || c > cols)
+			throw Exception(MER_OUT_OF_RANGE);
+		mp.erase(getMatrixIndex(r, c));
+		mptr.erase(getMatrixIndex(c, r));
 	}
 
 	// begin iteration, next element after [r, c]
@@ -318,7 +324,7 @@ void SwapRows(Matrix& m, const Dimension r1, const Dimension r2)
 		}
 		else if (me1.good && me1.r == r1 && (!me2.good || me2.r != r2 || me1.c < me2.c))
 		{
-			m.set(r1, me1.c, 0.0);
+			m.erase(r1, me1.c);
 			m.set(r2, me1.c, me1.v);
 			m.setIter(me2, r2, me1.c);
 			m.setIter(me1, r1, me1.c);
@@ -326,7 +332,7 @@ void SwapRows(Matrix& m, const Dimension r1, const Dimension r2)
 		else if (me2.good && me2.r == r2 && (!me1.good || me1.r != r1 || me2.c < me1.c))
 		{
 			m.set(r1, me2.c, me2.v);
-			m.set(r2, me2.c, 0.0);
+			m.erase(r2, me2.c);
 			m.setIter(me1, r1, me2.c);
 			m.setIter(me2, r2, me2.c);
 		}
@@ -374,7 +380,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		for (Dimension r : rn)
 		{
 			Real f = -ai(r, c) / tc;
-			ai.set(r, c, 0.0);
+			ai.erase(r, c);
 			MatrixElem me;
 			for (ai.setIter(me, c, c);me.good && me.r == c;ai.incIter(me))
 				ai.set(r, me.c, ai(r, me.c) + f *me.v);
@@ -547,7 +553,7 @@ int main(int argc, char *argv[])
 		Matrix A3 = Sub(A1, A2);
 		cout << "A1-A2= \n" << A3 << "\n";
 		SwapRows(A3, 1, 2);
-		SwapRows(A3, 4, 3);
+		SwapRows(A3, 5, 3);
 		cout << "Swapped Rows:\n" << A3 << "\n";
 		cout << "\n\n\n";
 
