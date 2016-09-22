@@ -13,7 +13,6 @@ Last modified: Sep. 2016.
 #include < math.h >
 #include < map >
 #include < set >
-#include < vector >
 
 #include < iostream >
 #include < iomanip > 
@@ -65,8 +64,8 @@ public:
 struct MatrixElem
 {
 	map< Index, Real >::iterator it;
-	Dimension c;
 	Dimension r;
+	Dimension c;
 	Real v;
 	bool good;
 };
@@ -74,8 +73,8 @@ struct MatrixElem
 struct MatrixElemTr
 {
 	set< Index >::iterator it;
-	Dimension c;
 	Dimension r;
+	Dimension c;
 	Real v;
 	bool good;
 };
@@ -335,20 +334,21 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		}
 
 		Real tc = ai(c, c);
-		vector< Dimension > rn;
-
-		for (ai.setIterTr(metr, c, c);metr.good && metr.c == c;ai.incIterTr(metr))
-			rn.push_back(metr.r);
-
-		for (Dimension r : rn)
+		ai.setIterTr(metr, c, c);
+		while (metr.good && metr.c == c)
 		{
+			r = metr.r;
 			Real f = -ai(r, c) / tc;
 			ai.erase(r, c);
-			MatrixElem me;
-			for (ai.setIter(me, c, c);me.good && me.r == c;ai.incIter(me))
-				ai.inc(r, me.c, f *me.v);
-			for (vi.setIter(me, c, 0);me.good && me.r == c;vi.incIter(me))
-				vi.inc(r, me.c, f *me.v);
+			if (f != 0.0)
+			{
+				MatrixElem me;
+				for (ai.setIter(me, c, c);me.good && me.r == c;ai.incIter(me))
+					ai.inc(r, me.c, f *me.v);
+				for (vi.setIter(me, c, 0);me.good && me.r == c;vi.incIter(me))
+					vi.inc(r, me.c, f *me.v);
+			}
+			ai.setIterTr(metr, r, c);
 		}
 	}
 	for (Dimension r = n;r >= 1;r--)
@@ -388,7 +388,7 @@ Matrix Add(Matrix& a, Matrix& b)
 			res.set(me1.r, me1.c, me1.v);
 			a.incIter(me1);
 		}
-		if (!me1.good || (me1.it)->first >(me2.it)->first)
+		if (!me1.good || (me1.it)->first > (me2.it)->first)
 		{
 			res.set(me2.r, me2.c, me2.v);
 			b.incIter(me2);
