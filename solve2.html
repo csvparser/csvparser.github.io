@@ -387,6 +387,7 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 		{
 			r = metr.r;
 			Real f = -ai(r, c) / tc;
+			ai.incIterTr(metr);
 			ai.erase(r, c);
 			if (f != 0.0)
 			{
@@ -396,7 +397,6 @@ Matrix Solve(const Matrix& a, const Matrix& v)
 				for (vi.setIter(me, c, 0);me.good && me.r == c;vi.incIter(me))
 					vi.inc(r, me.c, f *me.v);
 			}
-			ai.setIterTr(metr, r, c);
 		}
 	}
 	for (Dimension r = n;r >= 1;r--)
@@ -506,11 +506,11 @@ Matrix Mul(Matrix& a, Matrix& b)
 					temp += me.v*metr.v;
 					a.incIter(me);
 					b.incIterTr(metr);
-				} 
-				else if(me.c < metr.r)
-					a.incIter(me);
+				}
+				else if (me.c < metr.r)
+					a.incIter(me);  // also: a.setIter(me, r, metr.r - 1);
 				else
-					b.incIterTr(metr);
+					b.incIterTr(metr);  // also: b.setIterTr(metr, me.c - 1, m);
 			res.set(r, m, temp);
 		}
 	return res;
